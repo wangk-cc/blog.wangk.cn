@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+       
+      <meta name="keywords" content="王康,麒麟,儿子成长,日志,笔记,HelloCode,scratch,python,php,docker,lnmp,mysql,laravel,javascript" />
+       
+      <meta name="description" content="博客为中国软件开发者、IT从业人员、IT初学者打造交流的专业IT技术发表平台,全心致力于帮助开发者通过互联网分享知识,让更多开发者从中受益,一同和IT开发者用代码改变未来." />
+      
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Eloquent 模型关联关系 |  麒麟教育</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css"
+      />
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+       
+ 
+<script>
+var _hmt = _hmt || [];
+(function() {
+	var hm = document.createElement("script");
+	hm.src = "https://hm.baidu.com/hm.js?2f65ba7481b10d7c1c09ef3550f493bf";
+	var s = document.getElementsByTagName("script")[0]; 
+	s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+      <!-- mermaid -->
+      
+    <link rel="alternate" href="/atom.xml" title="麒麟教育" type="application/atom+xml">
+</head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      <canvas class="fireworks"></canvas>
+      <style>
+        .fireworks {
+          position: fixed;
+          left: 0;
+          top: 0;
+          z-index: 99999;
+          pointer-events: none;
+        }
+      </style>
+      
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-Eloquent模型关联关系"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Eloquent 模型关联关系
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2018/12/18/Eloquent%E6%A8%A1%E5%9E%8B%E5%85%B3%E8%81%94%E5%85%B3%E7%B3%BB/" class="article-date">
+  <time datetime="2018-12-18T15:16:26.000Z" itemprop="datePublished">2018-12-18</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Laravel/">Laravel</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">15k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">59 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>我们所熟知的 MySQL、SQL Server、Oracle 都是关系型数据库，何谓关系型数据库？简单来说就是数据表之间存在关联关系。到目前为止，我们介绍的所有 Eloquent 模型操作都是针对单表的，接下来我们将花三篇左右的篇幅来给大家介绍如何在 Eloquent 模型类中建立模型之间的各种关联关系，以及如何实现关联查询和更新。</p>
+<p>Eloquent 模型支持的关联关系包括以下七种：</p>
+<ul>
+<li>  一对一</li>
+<li>  一对多</li>
+<li>  多对多</li>
+<li>  远层一对多</li>
+<li>  多态关联（一对一）</li>
+<li>  多态关联（一对多）</li>
+<li>  多态关联（多对多）</li>
+</ul>
+<h1 id="一对一"><a href="#一对一" class="headerlink" title="一对一"></a>一对一</h1><h2 id="建立关联关系"><a href="#建立关联关系" class="headerlink" title="建立关联关系"></a>建立关联关系</h2><p>一对一是最简单的关联关系，一般可用于某张数据表的扩展表与主表之间的关联关系。比如在大型系统中，我们的用户表通常用于最基本信息的存储，如邮箱、用户名、密码等，然后像用户爱好、标签、个性签名、所在地等信息都存到另一张扩展表中，需要的时候才会去扩展表取数据，从而提高查询性能。针对这样的场景，我们就可以在两张表对应模型之间建立一对一关联。</p>
+<p>在开始之前，我们先通过数据库迁移创建一张 user_profiles 数据表，并创建对应模型 UserProfile，这可以通过以下 Artisan 命令一次完成：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php artisan make:model UserProfile -m</span><br></pre></td></tr></table></figure>
+<p>在生成的 create_user_profiles 迁移文件中编写迁移类的 up 方法如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">up</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Schema::create(<span class="string">&#x27;user_profiles&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">Blueprint <span class="variable">$table</span></span>) </span>&#123;</span><br><span class="line">        <span class="variable">$table</span>-&gt;increments(<span class="string">&#x27;id&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;integer(<span class="string">&#x27;user_id&#x27;</span>)-&gt;unsigned()-&gt;default(<span class="number">0</span>)-&gt;unique();</span><br><span class="line">        <span class="variable">$table</span>-&gt;string(<span class="string">&#x27;bio&#x27;</span>)-&gt;nullable()-&gt;comment(<span class="string">&#x27;个性签名&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;string(<span class="string">&#x27;city&#x27;</span>)-&gt;nullable()-&gt;comment(<span class="string">&#x27;所在城市&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;json(<span class="string">&#x27;hobby&#x27;</span>)-&gt;nullable()-&gt;comment(<span class="string">&#x27;个人爱好&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;timestamps();</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意，我们在 user_profiles 表中添加了一个 user_id 字段用于指向所属用户，从而建立于 users 表的关联。运行 php artisan migrate 在数据库创建这张数据表。</p>
+<p>准备好数据表之后，接下来，我们来通过模型类建立 users 表和 user_profiles 表之间的关联，Eloquent 模型类底层提供了相应的 API 方法帮助我们建立模型之间的关联。首先，我们在 User 模型类中通过 hasOne 方法定义其与 UserProfile 的一对一关联：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">profile</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;hasOne(UserProfile::class);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们通过数据库填充技术在 user_profiles 插入一些数据，这样就可以在 User 模型实例上通过关联方法名作为动态属性访问与其对应的 UserProfile 模型实例了：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$user</span> = User::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$profile</span> = <span class="variable">$user</span>-&gt;profile;</span><br></pre></td></tr></table></figure>
+<p>打印 $profile 结果如下：</p>
+<p><img src="https://upload.anitoys.com/hellocode/20210324234925.jpg" alt="img"></p>
+<h2 id="Eloquent-底层约定"><a href="#Eloquent-底层约定" class="headerlink" title="Eloquent 底层约定"></a>Eloquent 底层约定</h2><p>需要指出的是，在关联关系的建立过程中，Eloquent 也遵循了「约定大于配置」的原则。你可能注意到了我们在定义关联关系时，仅仅指定了模型类名，并没有指定通过哪些数据表字段建立关联，这并不是说 Laravel 神通广大，能知过去未来之事，而是因为 Eloquent 对此做了默认的约定。hasOne 方法的完整签名是：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">hasOne</span>(<span class="params"><span class="variable">$related</span>, <span class="variable">$foreignKey</span> = <span class="literal">null</span>, <span class="variable">$localKey</span> = <span class="literal">null</span></span>)</span></span><br></pre></td></tr></table></figure>
+<p>其中，第一个参数是关联模型的类名，第二个参数是关联模型类所属表的外键，这里对应的是 user_profiles 表的 user_id 字段，第三个参数是关联表的外键关联到当前模型所属表的哪个字段，这里对应的是 users 表的 id 字段。为什么我们不需要指定 Laravel 就能完成这种关联呢，这是因为如果没有指定 $foreignKey，Eloquent 底层会通过如下方法去拼接：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">getForeignKey</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Str::snake(class_basename(<span class="keyword">$this</span>)).<span class="string">&#x27;_&#x27;</span>.<span class="keyword">$this</span>-&gt;getKeyName();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>你可以看到，在本例中，拼接的结果正好是 user_id。</p>
+<p>同样，没有指定 $localKey 的话，Eloquent 底层会返回主键 ID：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">getKeyName</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;primaryKey;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在本例中，就是 id 了。</p>
+<p>遵循这种默认的约定，可以帮我们少写很多代码，减少很多额外的配置，所以如果不是迫不得已（比如从其他系统迁移过来），建议你在使用 Eloquent 的话，尽量遵循这些默认约定。如果数据表没有遵循这种约定的话，只能手动传参了。</p>
+<h2 id="建立相对的关联关系"><a href="#建立相对的关联关系" class="headerlink" title="建立相对的关联关系"></a>建立相对的关联关系</h2><p>通常我们都是通过 User 模型获取 UserProfile 模型，但是有时候我们可能需要反过来通过 UserProfile 反查所属的 User 模型，Eloquent 底层也为我们提供了相应的 belongsTo 方法来建立相对的一对一关联关系，我们在 UserProfile 模型类定义其与 User 模型的关联如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">user</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;belongsTo(User::class);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>同样，采用关联关系方法名作为动态属性即可访问该模型所属 User 模型实例：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$profile</span> = UserProfile::findOrFail(<span class="number">2</span>);</span><br><span class="line"><span class="variable">$user</span> = <span class="variable">$profile</span>-&gt;user;</span><br></pre></td></tr></table></figure>
+<p>打印 $user 用户信息如下：</p>
+<p><img src="https://upload.anitoys.com/hellocode/20210324234940.jpg" alt="img"><br>同样，和 hasOne 方法一样，belongsTo 方法也是遵循了默认的约定规则，其完整方法签名如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">belongsTo</span>(<span class="params"><span class="variable">$related</span>, <span class="variable">$foreignKey</span> = <span class="literal">null</span>, <span class="variable">$ownerKey</span> = <span class="literal">null</span>, <span class="variable">$relation</span> = <span class="literal">null</span></span>)</span></span><br></pre></td></tr></table></figure>
+<p>其中第一个参数是关联模型的类名。</p>
+<p>第二个参数是当前模型类所属表的外键，在本例中是 user_profiles 表的 user_id 字段，拼接规则和 hasOne 那里类似，只不过这里是基于第四个参数关联关系名称 $relation：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (is_null(<span class="variable">$relation</span>)) &#123;</span><br><span class="line">    <span class="variable">$relation</span> = <span class="keyword">$this</span>-&gt;guessBelongsToRelation();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (is_null(<span class="variable">$foreignKey</span>)) &#123;</span><br><span class="line">    <span class="variable">$foreignKey</span> = Str::snake(<span class="variable">$relation</span>).<span class="string">&#x27;_&#x27;</span>.<span class="variable">$instance</span>-&gt;getKeyName();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>$relation 默认约定是对应关联关系方法名，这里的是 user。如果你这里定义的方法名不是 user，则需要手动指定外键参数。</p>
+<p>第三个参数是关联模型类所属表的主键：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$instance</span> = <span class="keyword">$this</span>-&gt;newRelatedInstance(<span class="variable">$related</span>);</span><br><span class="line">...</span><br><span class="line"><span class="variable">$ownerKey</span> = <span class="variable">$ownerKey</span> ?: <span class="variable">$instance</span>-&gt;getKeyName();</span><br></pre></td></tr></table></figure>
+<p>第四个参数前面已经说过，默认约定就是关联关系方法名，也是关联关系动态属性名。</p>
+<p>还是很之前一样，建议遵循这些默认约定，可以少写很多代码，避免配置出错导致程序bug。如果实在满足不了这些默认的约定，只能指定按照上述约定指定传入自己的参数了。</p>
+<p>一对一关联很简单，但是我们还是花了很长的篇幅来讨论，因为后面其它关联的实现思路、访问方式、底层约定都是类似的，掌握了一对一关联，就能更好的理解和掌握其它关联关系的创建和使用。</p>
+<h1 id="一对多"><a href="#一对多" class="headerlink" title="一对多"></a>一对多</h1><h2 id="建立关联关系-1"><a href="#建立关联关系-1" class="headerlink" title="建立关联关系"></a>建立关联关系</h2><p>一对多关联是我们日常开发中经常碰到的一种关联关系。以博客系统为例，一个用户可以发布多篇文章，反过来，一篇只能归属于一个用户，那么用户和文章之间就是一对多的关系，同样，用户可以发布多条评论，一条评论只能归属于一个用户，用户与评论之间也是一对多关系。</p>
+<p>要定义用户文章之间的一对多关联，可以在 User 模型类中通过 Eloquent 底层提供的 hasMany 方法来实现：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">posts</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;hasMany(Post::class);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由于我们之间已经创建过 users 表和 posts 表，并且初始化过数据，所以我们可以直接通过动态属性的方式来调用用户模型上的文章：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$user</span> = User::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$posts</span> = <span class="variable">$user</span>-&gt;posts;</span><br></pre></td></tr></table></figure>
+<p>与 hasOne 返回的是单个模型实例不一样，hasMany 返回的是模型类集合：</p>
+<p><img src="https://upload.anitoys.com/hellocode/20210324234958.jpg" alt="img"></p>
+<h2 id="Eloquent-底层约定-1"><a href="#Eloquent-底层约定-1" class="headerlink" title="Eloquent 底层约定"></a>Eloquent 底层约定</h2><p>和 hasOne 方法一样，hasMany 方法底层也对如何建立关联关系做了约定，而且 hasMany 方法和 hasOne 方法的签名一样：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">hasMany</span>(<span class="params"><span class="variable">$related</span>, <span class="variable">$foreignKey</span> = <span class="literal">null</span>, <span class="variable">$localKey</span> = <span class="literal">null</span></span>)</span></span><br></pre></td></tr></table></figure>
+<p>$foreignKey 和 $localKey 默认获取逻辑也和 hasOne 完全一样，这里不再赘述。其实你完全可以把一对一关联看作一对多关联的简化版本，只不过一对一退化为只返回一条记录，所以实现逻辑一样也不难理解了。</p>
+<p>如果你的数据表结构不符合这种默认约定，可以自定义传入对应字段参数值。</p>
+<h2 id="建立相对的关联关系-1"><a href="#建立相对的关联关系-1" class="headerlink" title="建立相对的关联关系"></a>建立相对的关联关系</h2><p>与一对一一样，我们可以在文章模型中建立于用户模型之间的相对关联关系，而且这种使用场景很普遍，比如在文章详细页或列表页显示文章作者信息。还是通过 Eloquent 提供的 belongsTo 方法来实现：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">user</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;belongsTo(User::class);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样，我们就可以在文章模型实例上通过动态属性 user 来访问对应的用户信息：</p>
+<p>$post = Post::findOrFail(29);<br>$author = $post-&gt;user;<br>belongsTo 方法的底层约定我们在前面一对一关联中已经讨论过。这里，如果你想要让代码可读性更好，可以将 Post 模型中的关联关系调方法名修改为 author，这样，我们就需要手动指定更多的 belongsTo 方法传入参数了：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">author</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;belongsTo(User::class, <span class="string">&#x27;user_id&#x27;</span>, <span class="string">&#x27;id&#x27;</span>, <span class="string">&#x27;author&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>相应的访问方式也需要做调整：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$author</span> = <span class="variable">$post</span>-&gt;author;</span><br></pre></td></tr></table></figure>
+<p>返回结果完全一样。</p>
+<h2 id="渴求式加载"><a href="#渴求式加载" class="headerlink" title="渴求式加载"></a>渴求式加载</h2><p>前面我们演示的关联关系查询都是通过动态属性的方式，这种加载方式叫做「懒惰式加载」，因为都是用到的时候才回去查询，这就意味着要多次对数据库的进行查询才能返回需要的结果。如果是单条记录获取关联关系，就需要两次查询；如果是多条记录获取关联关系，比如文章列表页获取作者信息，因为每篇文章的作者通过动态属性获取都有一次查询，所以对N条记录来说，需要「N+1」次查询才能返回需要的结果，从数据库查询优化的角度来说，显然是不合理的。能不能一次就返回所有的关联查询结果呢？</p>
+<p>可以，Eloquent 为我们提供了 with 方法，我们将需要查询的关联关系动态属性（关联方法名）传入该方法，并将其链接到 Eloquent 模型原有的查询中，就可以一次完成关联查询，加上模型自身查询，总共查询两次。我们将这种加载方式叫做「渴求式加载」，即根据所需预先查询所有数据。</p>
+<p>以文章列表为例，我们可以通过这种方式获取文章及对应作者信息：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$posts</span> = Post::with(<span class="string">&#x27;author&#x27;</span>)</span><br><span class="line">    -&gt;where(<span class="string">&#x27;views&#x27;</span>, <span class="string">&#x27;&gt;&#x27;</span>, <span class="number">0</span>)</span><br><span class="line">    -&gt;offset(<span class="number">1</span>)-&gt;limit(<span class="number">10</span>)</span><br><span class="line">    -&gt;get();</span><br></pre></td></tr></table></figure>
+<p>对应的底层 SQL 执行语句是：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> `posts` <span class="keyword">where</span> `views` <span class="operator">&gt;</span> <span class="number">0</span> <span class="keyword">and</span> `posts`.`deleted_at` <span class="keyword">is</span> <span class="keyword">null</span> limit <span class="number">10</span> <span class="keyword">offset</span> <span class="number">0</span>;</span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> `users` <span class="keyword">where</span> `users`.`id` <span class="keyword">in</span> (?, ?, ?, ?, ?, ?) <span class="keyword">and</span> `email_verified_at` <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">null</span></span><br></pre></td></tr></table></figure>
+<p>这样，就可以在返回的列表中看到关联的作者信息了，在遍历的时候可以通过 $post-&gt;author 获取，而无需每次加载，从而提高数据库查询性能：</p>
+<p><img src="https://upload.anitoys.com/hellocode/20210324235009.jpg" alt="img"></p>
+<h1 id="多对多"><a href="#多对多" class="headerlink" title="多对多"></a>多对多</h1><h2 id="建立关联关系-2"><a href="#建立关联关系-2" class="headerlink" title="建立关联关系"></a>建立关联关系</h2><p>多对多关联也很常见，还是以博客系统为例，我们会为每篇文章设置标签，一篇文章往往有多个标签，反过来，一个标签可能会归属于多篇文章，这时，我们说文章和标签之间是多对多的关联关系。</p>
+<p>多对多关联比一对一和一对多关联复杂一些，需要借助一张中间表才能建立关联关系。以文章标签为例，文章表已经存在了，还需要创建一张 tags 表和中间表 post_tags。首先创建 Tags 模型类及其对应数据表 tags 迁移文件：</p>
+<p>php artisan make:model Tag -m<br>编写 create_tags_table 迁移文件对应类的 up 方法如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">up</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Schema::create(<span class="string">&#x27;tags&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">Blueprint <span class="variable">$table</span></span>) </span>&#123;</span><br><span class="line">        <span class="variable">$table</span>-&gt;increments(<span class="string">&#x27;id&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;string(<span class="string">&#x27;name&#x27;</span>, <span class="number">100</span>)-&gt;unique()-&gt;comment(<span class="string">&#x27;标签名&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;timestamps();</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后创建 post_tags 数据表迁移文件：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php artisan make:migration create_post_tags_table --create=post_tags</span><br></pre></td></tr></table></figure>
+<p>编写其对应迁移类的 up 方法如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">up</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Schema::create(<span class="string">&#x27;post_tags&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">Blueprint <span class="variable">$table</span></span>) </span>&#123;</span><br><span class="line">        <span class="variable">$table</span>-&gt;increments(<span class="string">&#x27;id&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;integer(<span class="string">&#x27;post_id&#x27;</span>)-&gt;unsigned()-&gt;default(<span class="number">0</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;integer(<span class="string">&#x27;tag_id&#x27;</span>)-&gt;unsigned()-&gt;default(<span class="number">0</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;unique([<span class="string">&#x27;post_id&#x27;</span>, <span class="string">&#x27;tag_id&#x27;</span>]);</span><br><span class="line">        <span class="variable">$table</span>-&gt;timestamps();</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行 php artisan migrate 让迁移生效。</p>
+<p>接下来，我们在 Post 模型类中定义其与 Tags 模型类的关联关系，通过 Eloquent 提供的 belongsToMany 方法来实现：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">tags</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;belongsToMany(Tag::class, <span class="string">&#x27;post_tags&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过数据库填充器填充一些数据到 tags 表和 post_tags 表，这样我们就可以通过关联查询查询指定 Post 模型上的标签信息了：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$tags</span> = <span class="variable">$post</span>-&gt;tags;</span><br></pre></td></tr></table></figure>
+<p>返回的是个模型集合：</p>
+<p><img src="https://upload.anitoys.com/hellocode/20210324235018.jpg" alt="img"><br>当然，你也可以通过前面提到的渴求式加载方式获取标签数据：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::with(<span class="string">&#x27;tags&#x27;</span>)-&gt;find(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$tags</span> = <span class="variable">$post</span>-&gt;tags;</span><br></pre></td></tr></table></figure>
+<p>返回结果和上面一样，但减少了对数据库的查询次数。</p>
+<h2 id="Eloquent-底层约定-2"><a href="#Eloquent-底层约定-2" class="headerlink" title="Eloquent 底层约定"></a>Eloquent 底层约定</h2><p>可以看到我们在定义多对多关联的时候，也没有指定通过哪些字段进行关联，这同样是遵循 Eloquent 底层默认约定的功劳，belongsToMany 方法签名如下：</p>
+<p>public function belongsToMany($related, $table = null, $foreignPivotKey = null, $relatedPivotKey = null, $parentKey = null, $relatedKey = null, $relation = null)<br>除了第一个参数之外，其它参数都可以为空。第一个参数是关联模型的类名，这里是 Tag。</p>
+<p>第二个参数 $table 是建立多对多关联的中间表名，该表名默认拼接规则如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$segments</span> = [</span><br><span class="line">    <span class="variable">$instance</span> ? <span class="variable">$instance</span>-&gt;joiningTableSegment()</span><br><span class="line">                  : Str::snake(class_basename(<span class="variable">$related</span>)),</span><br><span class="line">    <span class="keyword">$this</span>-&gt;joiningTableSegment(),</span><br><span class="line">];</span><br><span class="line"></span><br><span class="line">sort(<span class="variable">$segments</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> strtolower(implode(<span class="string">&#x27;_&#x27;</span>, <span class="variable">$segments</span>));</span><br></pre></td></tr></table></figure>
+<p>其中 $this-&gt;joiningTableSegment() 将当前模型类名转化为小写字母+下划线格式（注意不是复数格式，所以并不是对应默认表名），$instance 对应关联模型类实例，如果为空的话返回Str::snake(class_basename($related))，也会将关联类名转化为小写字母+下划线格式（也不是表名），然后对转化后的字符片段按字母表排序。所以本例中如果不指定中间表名，按照默认约定该值是 post_tag。但是为了遵循 Laravel 数据表名都是复数，所以我这里自定义了一回。</p>
+<p>第三个参数是 $foreignPivotKey 指的是中间表中当前模型类的外键，默认拼接规则和前面一对一、一对多一样，所以在本例中是 posts 表的 post_id 字段。我在建表的时候遵循了这个约定，所以不需要额外指定。</p>
+<p>第四个参数 $relatedPivotKey 是中间表中当前关联模型类的外键，拼接规则和 $foreignPivotKey 一样，只不过作用于关联模型类，所以在本例中是 tags 表的 tag_id 字段。同样，我在建表的时候也遵循了这一约定，不需要额外指定。</p>
+<p>第五个参数 $parentKey 表示对应当前模型的哪个字段（即 $foreignPivotKey 映射到当前模型所属表的哪个字段），默认是主键 ID，即 posts 表的 id 字段，所以这里不需要额外指定。</p>
+<p>第六个参数 $relatedKey 表示对应关联模型的哪个字段（即 $relatedPivotKey 映射到关联模型所属表的哪个字段），默认是关联模型的主键 ID，即 tags 表的 id 字段，所以这里也不需要额外指定。</p>
+<p>最后一个参数 $relation 表示关联关系名称，用于设置查询结果中的关联属性，默认是关联方法名。</p>
+<p>如果你没有遵循上述约定，需要手动指定自己的参数字段，不过还是建议遵循这些默认的约定，不然写着写着容易把自己绕晕。</p>
+<h2 id="建立相对的关联关系-2"><a href="#建立相对的关联关系-2" class="headerlink" title="建立相对的关联关系"></a>建立相对的关联关系</h2><p>与之前的关联关系一样，多对多关联也支持建立相对的关联关系，而且由于多对多的双方是平等的，不存在谁归属谁的问题，所以建立相对关联的方法都是一样的，我们可以在 Tag 模型中通过 belongsToMany 方法建立其与 Post 模型的关联关系：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">posts</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;belongsToMany(Post::class, <span class="string">&#x27;post_tags&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>比如博客的标签页，通过指定标签查看归属该标签下的所有文章，就可以用到类似的关联查询，相应的实现代码如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$tag</span> = Tag::with(<span class="string">&#x27;posts&#x27;</span>)-&gt;where(<span class="string">&#x27;name&#x27;</span>, <span class="string">&#x27;ab&#x27;</span>)-&gt;first();</span><br><span class="line"><span class="variable">$posts</span> = <span class="variable">$tag</span>-&gt;posts;</span><br></pre></td></tr></table></figure>
+<p>对应的查询结果如下：<br><img src="https://upload.anitoys.com/hellocode/20210324235027.jpg" alt="img"></p>
+<h2 id="获取中间表字段"><a href="#获取中间表字段" class="headerlink" title="获取中间表字段"></a>获取中间表字段</h2><p>Eloquent 还提供了方法允许你获取中间表的字段，你仔细看查询结果字段，会发现 relations 字段中有一个 pivot 属性，中间表字段就存放在这个属性对象上：<br><img src="https://upload.anitoys.com/hellocode/20210324235039.jpg" alt="img"><br>我们在遍历返回结果的时候可以在循环中通过 $post-&gt;pivot-&gt;tag_id 获取中间表字段值。不过中间表默认只返回关联模型的主键字段，如果要返回额外字段，需要在定义关联关系的时候手动指定，比如如果想要返回时间戳信息，可以这么定义：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">tags</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;belongsToMany(Tag::class, <span class="string">&#x27;post_tags&#x27;</span>)-&gt;withTimestamps();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样就可以返回文章标签创建时间和更新时间了：<br><img src="https://upload.anitoys.com/hellocode/20210324235050.jpg" alt="img"><br>如果除此之外，你还在中间表中定义了额外的字段信息，比如 user_id，可以通过 with 方法传入字段然后将其返回：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">tags</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;belongsToMany(Tag::class, <span class="string">&#x27;post_tags&#x27;</span>)-&gt;withPivot(<span class="string">&#x27;user_id&#x27;</span>)-&gt;withTimestamps();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="自定义中间表模型类"><a href="#自定义中间表模型类" class="headerlink" title="自定义中间表模型类"></a>自定义中间表模型类</h2><p>你还可以通过自定义中间表对应模型类实现更多自定义操作，中间表模型类继承自 Illuminate\Database\Eloquent\Relations\Pivot，Pivot 也是 Eloquent Model 类的子类，只不过为中间表操作定义了很多方法和属性，比如我们创建一个自定义的中间表模型类 PostTag：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">App</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Database</span>\<span class="title">Eloquent</span>\<span class="title">Relations</span>\<span class="title">Pivot</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PostTag</span> <span class="keyword">extends</span> <span class="title">Pivot</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">protected</span> <span class="variable">$table</span> = <span class="string">&#x27;post_tags&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样，我们在定义多对多关联关系的时候指定自定义的模型类了：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">tags</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;belongsToMany(Tag::class, <span class="string">&#x27;post_tags&#x27;</span>)-&gt;using(PostTag::class);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="更多中间表操作"><a href="#更多中间表操作" class="headerlink" title="更多中间表操作"></a>更多中间表操作</h2><p>此外，如果你觉得 pivot 可读性不好，你还可以自定义中间表实例属性名称：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">$this</span>-&gt;belongsToMany(Tag::class, <span class="string">&#x27;post_tags&#x27;</span>)-&gt;as(<span class="string">&#x27;taggable&#x27;</span>)-&gt;withTimestamps();</span><br></pre></td></tr></table></figure>
+<p>这样，就可以通过 $tag-&gt;taggable-&gt;created_at 访问中间表字段值了。</p>
+<p>还可以通过中间表字段值过滤关联数据（支持 where 和 in 查询）：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> <span class="keyword">$this</span>-&gt;belongsToMany(Tag::class, <span class="string">&#x27;post_tags&#x27;</span>)-&gt;wherePivot(<span class="string">&#x27;user_id&#x27;</span>, <span class="number">1</span>);</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">$this</span>-&gt;belongsToMany(Tag::class, <span class="string">&#x27;post_tags&#x27;</span>)-&gt;wherePivotIn(<span class="string">&#x27;user_id&#x27;</span>, [<span class="number">1</span>, <span class="number">2</span>]);</span><br></pre></td></tr></table></figure>
+
+<h1 id="远层一对多关联"><a href="#远层一对多关联" class="headerlink" title="远层一对多关联"></a>远层一对多关联</h1><h2 id="什么是远层一对多关联"><a href="#什么是远层一对多关联" class="headerlink" title="什么是远层一对多关联"></a>什么是远层一对多关联</h2><p>我们在上一篇教程中学习了一对多关联，远层一对多在一对多关联的基础上加上了一个修饰词「远层」，意味着这个一对多关系不是直接关联，而是「远层」关联，远层怎么关联呢？借助中间表。前面我们讨论的多对多关联也是借助中间表，但是远层一对多与其区别在于还是一对多的关联。所以理解一对多和多对多关联是理解今天介绍的几种关联关系的基础。</p>
+<p>光说概念你可能还是懵，下面我们举个例子来说明。如果我们的博客系统是针对全球市场的话，可能针对不同的国家推出不同的用户系统和功能，然后中国用户过来就只展示中国用户发布的文章，日本用户过来就只展示日本用户发布的文章，这里面涉及到三张表，存储国家的 countries 表，存储用户的 users 表，以及存储文章的 posts 表。用户与文章是一对多的关联关系，这一点我们上篇教程已经说过，国家与用户之间是一对多的关联（一个用户只能有一个国籍），那么通过用户这张中间表，国家和文章之间也建立起来一对多的关联，只是这个关联不是直接的关联，而是「远层」的关联。针对这样的情况，我们说国家和文章之间是远层的一对多关联。</p>
+<h2 id="建立远层一对多关联关系"><a href="#建立远层一对多关联关系" class="headerlink" title="建立远层一对多关联关系"></a>建立远层一对多关联关系</h2><p>了解这个关联的概念之后，我们要查询某个国家下的文章，要怎么做呢？或者说我们要怎么在模型类之间建立远层的一对多关联呢？</p>
+<p>开始之前，我们要先创建 Country 模型类及其对应数据库迁移：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php artisan make:model Country -m </span><br></pre></td></tr></table></figure>
+<p>编写新生成的数据库迁移文件对应迁移类的 up 方法如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">up</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Schema::create(<span class="string">&#x27;countries&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">Blueprint <span class="variable">$table</span></span>) </span>&#123;</span><br><span class="line">        <span class="variable">$table</span>-&gt;increments(<span class="string">&#x27;id&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;string(<span class="string">&#x27;name&#x27;</span>, <span class="number">100</span>)-&gt;unique();</span><br><span class="line">        <span class="variable">$table</span>-&gt;string(<span class="string">&#x27;slug&#x27;</span>, <span class="number">100</span>)-&gt;unique();</span><br><span class="line">        <span class="variable">$table</span>-&gt;timestamps();</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后，编写迁移文件为 users 表新增一个 country_id 字段：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php artisan make:migration alter_users_add_country_id --table=users</span><br></pre></td></tr></table></figure>
+<p>编写新生成的迁移类文件如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Support</span>\<span class="title">Facades</span>\<span class="title">Schema</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Database</span>\<span class="title">Schema</span>\<span class="title">Blueprint</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Illuminate</span>\<span class="title">Database</span>\<span class="title">Migrations</span>\<span class="title">Migration</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AlterUsersAddCountryId</span> <span class="keyword">extends</span> <span class="title">Migration</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Run the migrations.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">up</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        Schema::table(<span class="string">&#x27;users&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">Blueprint <span class="variable">$table</span></span>) </span>&#123;</span><br><span class="line">            <span class="variable">$table</span>-&gt;integer(<span class="string">&#x27;country_id&#x27;</span>)-&gt;unsigned()-&gt;default(<span class="number">0</span>);</span><br><span class="line">            <span class="variable">$table</span>-&gt;index(<span class="string">&#x27;country_id&#x27;</span>);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Reverse the migrations.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">down</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        Schema::table(<span class="string">&#x27;users&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">Blueprint <span class="variable">$table</span></span>) </span>&#123;</span><br><span class="line">            <span class="variable">$table</span>-&gt;dropColumn(<span class="string">&#x27;country_id&#x27;</span>);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接下来，运行 php artisan migrate 让迁移生效。在 countries 表和 users 表填充一些测试数据便于后续测试。</p>
+<p>准备好数据库、模型类并填充测试数据后，接下来，我们在 Country 模型类中通过 Eloquent 提供的 hasManyThrough 方法定义其与 Post 模型类之间的远层一对多关联：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">posts</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;hasManyThrough(Post::class, User::class);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中，第一个参数是关联的模型类，第二个参数是中间借助的模型类。</p>
+<p>这样，我们就可以在代码中通过 Country 模型实例获取归属于该国家的所有文章了，查询方式和前面其它关联查询一样，可以懒惰式加载，也可以渴求式加载：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$country</span> = Country::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$posts</span> = <span class="variable">$country</span>-&gt;posts;</span><br></pre></td></tr></table></figure>
+<p>返回结果也是模型集合：<br><img src="https://upload.anitoys.com/hellocode/20210324235103.jpg" alt="img"></p>
+<h2 id="Eloquent-底层约定-3"><a href="#Eloquent-底层约定-3" class="headerlink" title="Eloquent 底层约定"></a>Eloquent 底层约定</h2><p>同样，我们在通过 hasManyThrough 方法定义远层一对多关联关系的时候，并没有指定关联字段，因为我们在定义数据库字段、模型类的时候都遵循了 Eloquent 底层的约定。</p>
+<p>我们来看一下 hasManyThrough 方法的完整签名：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">hasManyThrough</span>(<span class="params"><span class="variable">$related</span>, <span class="variable">$through</span>, <span class="variable">$firstKey</span> = <span class="literal">null</span>, <span class="variable">$secondKey</span> = <span class="literal">null</span>, <span class="variable">$localKey</span> = <span class="literal">null</span>, <span class="variable">$secondLocalKey</span> = <span class="literal">null</span></span>)</span></span><br></pre></td></tr></table></figure>
+<p>其中，第一个参数和第二个参数分别是关联模型类和中间模型类。</p>
+<p>第三个参数 $firstKey 表示中间模型类与当前模型类的关联外键，按照默认约定，在本例中拼接出来的字段是 country_id，正好和我们在中间表 users 中新增的 country_id 吻合，所以不需要额外指定。</p>
+<p>第四个参数 $secondKey 指的是中间模型类与关联模型类的关联外键，按照默认约定，在本例中拼接出来的字段是 user_id，正好和我们在关联表 posts 中定义的 user_id 吻合，所以也不需要额外指定。</p>
+<p>第五个参数 $localKey 默认是当前模型类的主键 ID，第六个参数是中间模型类的主键 ID。</p>
+<p>如果你的字段定义与 Eloquent 底层默认约定拼接出来的字段不一致，需要手动指定对应参数。</p>
+<h1 id="一对一的多态关联"><a href="#一对一的多态关联" class="headerlink" title="一对一的多态关联"></a>一对一的多态关联</h1><h2 id="什么是一对一的多态关联"><a href="#什么是一对一的多态关联" class="headerlink" title="什么是一对一的多态关联"></a>什么是一对一的多态关联</h2><p>接下来讲的三个关联关系都归属于多态关联，多态关联允许目标模型通过单个关联归属于多种类型的模型，根据模型之间的关联关系类型，又可以将多态关联细分为一对一、一对多和多对多三种关联。首先我们来看最简单的一对一多态关联。</p>
+<p>一对一多态关联和上一篇的一对一关联有点类似，只不过这里的一对一关联是「多态」的，说理论太抽象，我们还是举例来说明。假设在我们的博客系统中用户可以设置头像，文章也可以设置缩略图，我们知道每个用户只能有一个头像，一篇文章也只能有一个缩略图，所以此时用户和图片之间是一对一关联，文章和图片之间也是一对一关联，通过多态关联，我们可以让用户和文章共享与图片的一对一关联，我们只需要在图片模型类通过一次定义，就可以动态建立与用户和文章的关联。</p>
+<p>要建立这种多态管理，需要图片表结构支持与对应用户和文章的关联，只是，在这里，我们需要两个字段才能建立这种关联，一个是类型字段，表示归属于用户还是文章，另一个是ID字段，指向对应的用户/文章ID，这样，我们就可以结合这两个字段唯一确定该图片归属于哪个用户/哪篇文章了。</p>
+<h2 id="如何建立一对一的多态关联"><a href="#如何建立一对一的多态关联" class="headerlink" title="如何建立一对一的多态关联"></a>如何建立一对一的多态关联</h2><p>开始之前我们要创建图片模型类 Image 及其对应数据库迁移文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php artisan make:model Image -m</span><br></pre></td></tr></table></figure>
+<p>然后编写新创建的 create_images_table 迁移文件对应迁移类的 up 方法如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">up</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Schema::create(<span class="string">&#x27;images&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">Blueprint <span class="variable">$table</span></span>) </span>&#123;</span><br><span class="line">        <span class="variable">$table</span>-&gt;increments(<span class="string">&#x27;id&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;string(<span class="string">&#x27;url&#x27;</span>)-&gt;comment(<span class="string">&#x27;图片URL&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;morphs(<span class="string">&#x27;imageable&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;timestamps();</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中 $table-&gt;morphs(‘imageable’) 用于创建 imageable_id 和 imageable_type 两个字段，其中 imageable_type 用于存放 User 模型类或 Post 模型类，而 imageable_id 用于存放对应的模型实例 ID，从而方便遵循默认约定建立多态关联。</p>
+<p>运行 php artisan migrate 让迁移生效，准备好数据表和模型类后，接下来我们在模型类中建立一对一的多态关联。首先在 Image 模型类中通过 morphTo 建立其与 User/Post 模型类之间的关联：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">imageable</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;morphTo();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们不需要指定任何字段，因为我们在创建数据表和定义关联方法的时候都遵循了 Eloquent 底层的约定，还是来看下 morphTo 方法的完整签名：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">morphTo</span>(<span class="params"><span class="variable">$name</span> = <span class="literal">null</span>, <span class="variable">$type</span> = <span class="literal">null</span>, <span class="variable">$id</span> = <span class="literal">null</span>, <span class="variable">$ownerKey</span> = <span class="literal">null</span></span>)</span></span><br></pre></td></tr></table></figure>
+<p>第一个参数 $name 是关联关系名称，默认就是关联方法名，在本例中是 imageable。</p>
+<p>第二个参数 $type、第三个参数 $id 结合第一个参数 $name 用于构建关联字段，在本例中就是 imageable_type 和 imageable_id。由于我们的数据库字段和关联方法名都遵循了默认约定，所以不需要额外指定。如果你的数据库字段名是自定义的，比如 item_id 和 item_type，那么就需要指定第一个参数值为 item。</p>
+<p>最后一个参数是当前模型类的主键 ID。</p>
+<p>这样，我们就可以在 images 表中填充一些测试数据进行测试了，你可以借助填充器来填充，或者手动插入，需要注意的是在 imageable_type 字段中需要插入完整的类名作为类型，比如 App\User 或者 App\Post，以便 Eloquent 在插询的时候结合 imageable_id 字段利用反射构造对应的模型实例：<br><img src="https://upload.anitoys.com/hellocode/20210324235351.jpg" alt="img"><br>这样，我们就可以在 Image 实例上获取其归属的模型实例了：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$image</span> = Image::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$item</span> = <span class="variable">$image</span>-&gt;imageable;</span><br></pre></td></tr></table></figure>
+<p>返回结果是对应的模型类实例，我们打印 $item 对象，现实如下：<br><img src="https://upload.anitoys.com/hellocode/20210324235115.jpg" alt="img"></p>
+<h2 id="定义相对的关联关系"><a href="#定义相对的关联关系" class="headerlink" title="定义相对的关联关系"></a>定义相对的关联关系</h2><p>当然，我们在日常开发中，更常见的是获取某个用户的头像或者某篇文章的缩略图，这样，我们就需要在 User 模型中定义其与 Image 模型的关联：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">image</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;morphOne(Image::class, <span class="string">&#x27;imageable&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后在 Post 模型中定义其与 Image 模型的关联：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">image</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;morphOne(Image::class, <span class="string">&#x27;imageable&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>同样，因为我们遵循了 Eloquent 底册的约定，只需要传入最少的参数即可建立关联。morphOne 方法的完整签名如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">morphOne</span>(<span class="params"><span class="variable">$related</span>, <span class="variable">$name</span>, <span class="variable">$type</span> = <span class="literal">null</span>, <span class="variable">$id</span> = <span class="literal">null</span>, <span class="variable">$localKey</span> = <span class="literal">null</span></span>)</span></span><br></pre></td></tr></table></figure>
+<p>第一个参数表示关联的模型类。</p>
+<p>第二个参数 $name、第三个参数 $type、第四个参数 $id 和前面的 morphTo 方法的前三个参数一样，用于在关联表中拼接关联外键，在本例中就是 imageable_type 和 imageable_id，所以第三个和第四个参数不需要额外指定，当然如果你是用的是 item_id 和 item_type 字段需要将第二个参数设置为 item，如果结尾不是以 type 和 id 作为后缀，也需要通过 $type 和 $id 参数传入。</p>
+<p>最后一个参数 $localKey 表示当前模型类的主键 ID。</p>
+<p>在模型类中定义完关联方法后，就可以在代码中通过相应方法获取关联模型了：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$image</span> = <span class="variable">$post</span>-&gt;image;</span><br></pre></td></tr></table></figure>
+<p>返回结果是 Image 模型实例：<br><img src="https://upload.anitoys.com/hellocode/20210324235128.jpg" alt="img"><br>底层对应的查询 SQL 语句如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">  <span class="operator">*</span></span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">  `images`</span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">  `images`.`imageable_id` <span class="operator">=</span> <span class="number">1</span></span><br><span class="line">  <span class="keyword">and</span> `images`.`imageable_id` <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">null</span></span><br><span class="line">  <span class="keyword">and</span> `images`.`imageable_type` <span class="operator">=</span> &quot;App\Post&quot;</span><br><span class="line">limit</span><br><span class="line">  <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="一对多的多态关联"><a href="#一对多的多态关联" class="headerlink" title="一对多的多态关联"></a>一对多的多态关联</h1><h2 id="什么是一对多的多态关联"><a href="#什么是一对多的多态关联" class="headerlink" title="什么是一对多的多态关联"></a>什么是一对多的多态关联</h2><p>理解了一对一的多态关联之后，一对多的多态关联理解起来就简单多了，其实就是模型类与关联类之间的关联变成一对多了，只不过这个一对多是多态的，如何理解这个多态，其实就是在关联表引入了类型的概念，关联表中的数据不再是与某一张表有关联，而是与多张表有关联，具体是哪张表通过关联类型来确定，具体与哪条记录关联，通过关联ID来确定。能理解到这个层面基本上就可以通吃多态关联了。这种逻辑和面向对象中的多态很像（面向对象三大特性：继承、封装、多态），所以将其称作「多态关联」。</p>
+<p>下面我们还是以一个具体的例子来解释下一对多多态关联。</p>
+<p>博客系统中免不了评论系统，以 Larave 学院为例，它支持两种类型的内容发布，一种是普通的文章，一种是独立的页面，分别存在两张表里。用户可以评论普通文章，也可以评论页面，我们不可能去为不同类型的内容分别创建评论表，因为它们的结构是完全一样的。我们知道如果单独看文章和评论，它们是一对多的关系，现在我们的评论表还要支持页面评论的存储，因此，需要引入一个类型字段做区分，这样，文章/页面与评论之间的关联关系就变成一对多的多态关联了。是不是这么看起来，也就那么回事了？</p>
+<p>接下来，我们就来实际演示如何在模型类中建立一对多的多态关联。</p>
+<h2 id="在模型类中构建一对多多态关联"><a href="#在模型类中构建一对多多态关联" class="headerlink" title="在模型类中构建一对多多态关联"></a>在模型类中构建一对多多态关联</h2><p>首先还是要创建对应数据表和模型，我们先创建评论模型类 Comment 及其数据库迁移文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php artisan make:model Comment -m</span><br></pre></td></tr></table></figure>
+<p>编写新生成的 create_comments_table 迁移文件对应迁移类的 up 方法如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">up</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Schema::create(<span class="string">&#x27;comments&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">Blueprint <span class="variable">$table</span></span>) </span>&#123;</span><br><span class="line">        <span class="variable">$table</span>-&gt;increments(<span class="string">&#x27;id&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;text(<span class="string">&#x27;content&#x27;</span>)-&gt;comment(<span class="string">&#x27;评论内容&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;integer(<span class="string">&#x27;user_id&#x27;</span>)-&gt;unsigned()-&gt;default(<span class="number">0</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;morphs(<span class="string">&#x27;commentable&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;index(<span class="string">&#x27;user_id&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;softDeletes();</span><br><span class="line">        <span class="variable">$table</span>-&gt;timestamps();</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后创建一个 Page 模型类及其对应数据库迁移文件用于存放页面内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php artisan make:model Page -m</span><br></pre></td></tr></table></figure>
+<p>编写新生成的 create_pages_table 迁移文件对应迁移类的 up 方法如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">up</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Schema::create(<span class="string">&#x27;pages&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">Blueprint <span class="variable">$table</span></span>) </span>&#123;</span><br><span class="line">        <span class="variable">$table</span>-&gt;increments(<span class="string">&#x27;id&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;string(<span class="string">&#x27;title&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;string(<span class="string">&#x27;slug&#x27;</span>)-&gt;unique();</span><br><span class="line">        <span class="variable">$table</span>-&gt;text(<span class="string">&#x27;content&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;integer(<span class="string">&#x27;user_id&#x27;</span>)-&gt;unsigned()-&gt;default(<span class="number">0</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;index(<span class="string">&#x27;user_id&#x27;</span>);</span><br><span class="line">        <span class="variable">$table</span>-&gt;softDeletes();</span><br><span class="line">        <span class="variable">$table</span>-&gt;timestamps();</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行 php artisan migrate 让迁移生效。</p>
+<p>准备好数据库之后，我们通过填充器填充一些数据到刚创建的两张数据表。然后在 Comment 模型类中通过 Eloquent 提供的 morphTo 方法定义其与 Post 模型和 Page 之间的一对多多态关联：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">commentable</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;morphTo();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为一个评论只会对应一篇文章/页面，所以，通过和一对一的多态关联同样的 morphTo 方法定义其与文章和页面的关联关系即可。和前面的一对一多态关联一样，因为我们的数据表字段和关联方法名都遵循了 Eloquent 底层的默认约定，所以不需要指定任何额外参数，即可完成关联关系的构建。这些默认约定我们在上面一对一多态关联中已经详细列出，这里就不再赘述了。</p>
+<p>这样，我们就可以通过 Comment 实例查询其归属的文章或页面了：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$comment</span> = Comment::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$item</span> = <span class="variable">$comment</span>-&gt;commentable;</span><br></pre></td></tr></table></figure>
+<p>返回的结果是对应的模型实例：<br><img src="https://upload.anitoys.com/hellocode/20210324235136.jpg" alt="img"></p>
+<h2 id="定义相对的关联关系-1"><a href="#定义相对的关联关系-1" class="headerlink" title="定义相对的关联关系"></a>定义相对的关联关系</h2><p>同样，我们在日常开发中，更多的是通过文章或页面实例获取对应的评论信息，比如在文章页或页面页获取该文章或页面的所有评论。为此，我们需要在 Post 模型类和 Page 模型类中定义其与 Comment 模型的关联关系，这需要通过 morphMany 方法来实现：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">comments</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;morphMany(Comment::class, <span class="string">&#x27;commentable&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>和 morphOne 方法一样，因为我们遵循了 Eloquent 底层的默认约定，所以只需要传递很少的必要参数就可以定义关联关系了，morphMany 方法的完整签名如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">morphMany</span>(<span class="params"><span class="variable">$related</span>, <span class="variable">$name</span>, <span class="variable">$type</span> = <span class="literal">null</span>, <span class="variable">$id</span> = <span class="literal">null</span>, <span class="variable">$localKey</span> = <span class="literal">null</span></span>)</span></span><br></pre></td></tr></table></figure>
+<p>这些参数的含义和 morphOne 方法完全一样，这里就不再赘述了。如果想要在 Post 模型下获取对应的所有评论，可以这么做：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::with(<span class="string">&#x27;comments&#x27;</span>)-&gt;findOrFail(<span class="number">23</span>);</span><br><span class="line"><span class="variable">$comments</span> = <span class="variable">$post</span>-&gt;comments;</span><br></pre></td></tr></table></figure>
+<p>返回的结果是 Comment 模型对象集合：<br><img src="https://upload.anitoys.com/hellocode/20210324235145.jpg" alt="img"><br>对应的关联查询底层 SQL 语句是：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">  <span class="operator">*</span></span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">  `comments`</span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">  `comments`.`commentable_id` <span class="keyword">in</span> (<span class="number">23</span>)</span><br><span class="line">  <span class="keyword">and</span> `comments`.`commentable_type` <span class="operator">=</span> &quot;App\Post&quot;</span><br><span class="line">  <span class="keyword">and</span> `comments`.`deleted_at` <span class="keyword">is</span> <span class="keyword">null</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="多对多的多态关联"><a href="#多对多的多态关联" class="headerlink" title="多对多的多态关联"></a>多对多的多态关联</h1><h2 id="什么是多对多的多态关联"><a href="#什么是多对多的多态关联" class="headerlink" title="什么是多对多的多态关联"></a>什么是多对多的多态关联</h2><p>多对多的多态关联比前面的一对一和一对多更加复杂，但是有了前面讲解的基础，理解起来也很简单。你可以类比下常规的多对多关联，现在加入了「多态」的概念，常规的多对多需要借助中间表，多态的也是，只不过此时不仅仅是两张表之间的关联，而是也要引入类型字段。</p>
+<p>还是以文章和标签的关联为例，在常规的多对多关联中，中间表只需要一个标签 ID 和文章 ID 即可建立它们之间的关联，但当我们添加新的内容类型，比如页面、视频、音频，它们也有标签，而且完全可以共享一张标签表，此时仅仅一个文章 ID 已经满足不了定义内容与标签之间的关联了，所以此时引入多对多的多态关联，和前面两种多态关联思路一样，只是在多对多关联中，我们需要在中间表中引入类型字段来标识内容类型，将原来的文章ID调整为内容ID，这样就可以从数据库层面满足不同内容类型与标签之间的关联了。</p>
+<p>所以你可以看到从一对一、一对多（远层一对多）、多对多、一对一多态关联、一对多多态关联、多对多多态关联，它们之间是层层递进的，理解了前面的，后面的也就更好理解。</p>
+<p>下面我们以标签与文章、页面关联关系为例，演示如何定义和使用多对多的多态关联。</p>
+<h2 id="在模型类中定义多对多的多态关联"><a href="#在模型类中定义多对多的多态关联" class="headerlink" title="在模型类中定义多对多的多态关联"></a>在模型类中定义多对多的多态关联</h2><p>首先我们要废弃原来的 post_tags 数据表，创建一个新的 taggables 数据表来构建不同内容类型与标签之间的关联：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php artisan make:migration create_taggables_table --create=taggables</span><br></pre></td></tr></table></figure>
+<p>编写新生成的 create_taggables_table 迁移文件对应迁移类的 up 方法如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Schema::create(<span class="string">&#x27;taggables&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">Blueprint <span class="variable">$table</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$table</span>-&gt;increments(<span class="string">&#x27;id&#x27;</span>);</span><br><span class="line">    <span class="variable">$table</span>-&gt;integer(<span class="string">&#x27;tag_id&#x27;</span>);</span><br><span class="line">    <span class="variable">$table</span>-&gt;morphs(<span class="string">&#x27;taggable&#x27;</span>);</span><br><span class="line">    <span class="variable">$table</span>-&gt;index(<span class="string">&#x27;tag_id&#x27;</span>);</span><br><span class="line">    <span class="variable">$table</span>-&gt;unique([<span class="string">&#x27;tag_id&#x27;</span>, <span class="string">&#x27;taggable_id&#x27;</span>, <span class="string">&#x27;taggable_type&#x27;</span>]);</span><br><span class="line">    <span class="variable">$table</span>-&gt;timestamps();</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>运行 php artisan migrate 让迁移生效。然后通过填充器填充一些测试数据到新生成的 taggables 数据表。</p>
+<p>接下来我们在 Tag 模型类中通过 Eloquent 提供的 morphedByMany 方法定义其与其他模型类的多对多多态关联：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">posts</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;morphedByMany(Post::class, <span class="string">&#x27;taggable&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">pages</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;morphedByMany(Page::class, <span class="string">&#x27;taggable&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>和之前一样，因为我们遵循了 Eloquent 底层的默认约定，所以我们只需传递必需参数，无需额外配置即可定义关联关系，我们来看下 morphedByMany 方法的完整签名：</p>
+<p>public function morphedByMany($related, $name, $table = null, $foreignPivotKey = null, $relatedPivotKey = null, $parentKey = null, $relatedKey = null)<br>其中第一个参数 $related 表示关联的模型类。</p>
+<p>第二个参数 $name 表示关联的名称，和定义中间表数据库迁移的时候 morphs 方法中指定的值一致，也就是 taggable。</p>
+<p>第三个参数 $table 表示中间表名称，默认是第二个参数 $name 的复数格式，这里就是 taggables 了，因为我们在创建数据表的时候遵循了这一约定，所以不需要额外指定。</p>
+<p>第四个参数 $foreignPivotKey 表示当前模型类在中间表中的外键，默认拼接结果是 tag_id，和我们在数据表中定义的一样，所以这里不需要额外指定。</p>
+<p>第五个参数 $relatedPivotKey 表示默认是通过 $name 和 _id 组合而来，表示中间表中的关联ID字段，这里组合结果是 taggable_id，和我们定义的一致，也不需要额外指定。</p>
+<p>第六个参数 $parentKey 默认表示当前模型类的主键 ID，即与中间表中 tag_id 关联的字段。</p>
+<p>第七个参数 $relatedKey 表示关联模型类的主键 ID，这个因 $related 指定的模型而定。</p>
+<p>如果你不是按照默认约定的规则定义的数据库字段，需要明确每一个参数的含义，然后传入对应的参数值，和之前一样，对新手来说，还是按照默认约定来比较好，免得出错。</p>
+<p>定义好上述关联关系后，就可以查询指定标签模型上关联的文章/页面了：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$tag</span> = Tag::with(<span class="string">&#x27;posts&#x27;</span>, <span class="string">&#x27;pages&#x27;</span>)-&gt;findOrFail(<span class="number">53</span>);</span><br><span class="line"><span class="variable">$posts</span> = <span class="variable">$tag</span>-&gt;posts;</span><br><span class="line"><span class="variable">$pages</span> = <span class="variable">$tag</span>-&gt;pages;</span><br></pre></td></tr></table></figure>
+<p>返回的结果都是对应的模型实例集合。</p>
+<h2 id="定义相对的关联关系-2"><a href="#定义相对的关联关系-2" class="headerlink" title="定义相对的关联关系"></a>定义相对的关联关系</h2><p>最后，我们还可以在 Post 模型类或 Page 模型类中通过 Eloquent 提供的 morphToMany 方法定义该模型与 Tag 模型的关联关系（两个模型类中定义的方法完全一样）：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">tags</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;morphToMany(Tag::class, <span class="string">&#x27;taggable&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为我们遵循和 Eloquent 底层默认的约定，所以指定很少的参数就可以定义多对多的多态关联，morphToMany 方法的完整签名如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">morphToMany</span>(<span class="params"><span class="variable">$related</span>, <span class="variable">$name</span>, <span class="variable">$table</span> = <span class="literal">null</span>, <span class="variable">$foreignPivotKey</span> = <span class="literal">null</span>, <span class="variable">$relatedPivotKey</span> = <span class="literal">null</span>, <span class="variable">$parentKey</span> = <span class="literal">null</span>, <span class="variable">$relatedKey</span> = <span class="literal">null</span>, <span class="variable">$inverse</span> = <span class="literal">false</span></span>)</span></span><br></pre></td></tr></table></figure>
+<p>其中前七个参数和 morphedByMany 方法含义一致，只不过针对的关联模型对调过来，最后一个参数 $inverse 表示定义的是否是相对的关联关系，默认是 false。如果你是不按套路出牌自定义的字段，需要搞清楚以上参数的含义并传入自定义的参数值。</p>
+<p>定义好上述关联关系后，就可以通过 Post 模型或 Page 模型获取对应的标签信息了：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::with(<span class="string">&#x27;tags&#x27;</span>)-&gt;findOrFail(<span class="number">6</span>);</span><br><span class="line"><span class="variable">$tags</span> = <span class="variable">$post</span>-&gt;tags;</span><br></pre></td></tr></table></figure>
+<p>返回的结果也是模型集合：<br><img src="https://upload.anitoys.com/hellocode/20210324235152.jpg" alt="img"><br>对应的底层查询 SQL 语句是：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">  `tags`.<span class="operator">*</span>,</span><br><span class="line">  `taggables`.`taggable_id` <span class="keyword">as</span> `pivot_taggable_id`,</span><br><span class="line">  `taggables`.`tag_id` <span class="keyword">as</span> `pivot_tag_id`,</span><br><span class="line">  `taggables`.`taggable_type` <span class="keyword">as</span> `pivot_taggable_type`</span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">  `tags`</span><br><span class="line">  <span class="keyword">inner</span> <span class="keyword">join</span> `taggables` <span class="keyword">on</span> `tags`.`id` <span class="operator">=</span> `taggables`.`tag_id`</span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">  `taggables`.`taggable_id` <span class="keyword">in</span> (<span class="number">6</span>)</span><br><span class="line">  <span class="keyword">and</span> `taggables`.`taggable_type` <span class="operator">=</span> &quot;App\Post&quot;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h1 id="关联查询"><a href="#关联查询" class="headerlink" title="关联查询"></a>关联查询</h1><p>关于关联查询，我们在前面介绍关联关系定义的时候已经穿插着介绍过，这里简单回顾下。在 Eloquent 模型上进行关联查询主要分为两种方式，一种是懒惰式加载（动态属性），一种是渴求式加载（通过with方法）。从性能上来说，渴求式加载更优，因为它会提前从数据库一次性查询所有关联数据，而懒惰式加载在每次查询动态属性的时候才会去执行查询，会多次连接数据库，性能上差一些（数据库操作主要开销在数据库连接上，所以在开发过程中如果想优化性能，尽量减少频繁连接数据库）</p>
+<h2 id="懒惰式加载"><a href="#懒惰式加载" class="headerlink" title="懒惰式加载"></a>懒惰式加载</h2><p>下面这种方式就是懒惰式加载：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$author</span> = <span class="variable">$post</span>-&gt;author;</span><br></pre></td></tr></table></figure>
+<p>每次访问 author 属性都会执行一次数据库查询，如果返回的文章结果是列表的话，需要遍历获取作者信息，假设要循环 N 次的话，加上文章模型本身的获取，总共需要进行 N + 1 次查询，而 PHP 对数据库的连接是短连接，每次都要重新连接数据库，所以从性能角度考虑不建议使用这种方式。</p>
+<p>另外，如果访问的是模型实例上的 author() 方法时，返回的不是用户实例了，而是一个关联关系实例，该实例注入了查询构建器，所以你可以在其基础上通过方法链的方式构建查询构建器进行更加复杂的查询，我们以一个一对多的查询为例：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$user</span> = User::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$posts</span> = <span class="variable">$user</span>-&gt;posts()-&gt;where(<span class="string">&#x27;views&#x27;</span>, <span class="string">&#x27;&gt;&#x27;</span>, <span class="number">0</span>)-&gt;get();</span><br></pre></td></tr></table></figure>
+<p>这样，我们就可以过滤出该用户发布的文章中浏览数大于 1 的结果。</p>
+<h2 id="基于关联查询过滤模型实例"><a href="#基于关联查询过滤模型实例" class="headerlink" title="基于关联查询过滤模型实例"></a>基于关联查询过滤模型实例</h2><h3 id="有结果过滤"><a href="#有结果过滤" class="headerlink" title="有结果过滤"></a>有结果过滤</h3><p>有的时候，可能需要根据关联查询的结果来过滤查询结果，比如我们想要获取所有发布过文章的用户，可以这么做：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$users</span> = User::has(<span class="string">&#x27;posts&#x27;</span>)-&gt;get();</span><br></pre></td></tr></table></figure>
+<p>返回的是模型实例集合：<br><img src="https://upload.anitoys.com/hellocode/20210324235200.jpg" alt="img"><br>底层对应的是一个 EXISTS 查询：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">  <span class="operator">*</span></span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">  `users`</span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">  <span class="keyword">exists</span> (</span><br><span class="line">    <span class="keyword">select</span></span><br><span class="line">      <span class="operator">*</span></span><br><span class="line">    <span class="keyword">from</span></span><br><span class="line">      `posts`</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">      `users`.`id` <span class="operator">=</span> `posts`.`user_id`</span><br><span class="line">      <span class="keyword">and</span> `posts`.`deleted_at` <span class="keyword">is</span> <span class="keyword">null</span></span><br><span class="line">  )</span><br><span class="line">  <span class="keyword">and</span> `email_verified_at` <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">null</span></span><br></pre></td></tr></table></figure>
+<p>如果你想要进一步过滤发布文章数量大于 1 的用户，可以带上查询条件：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$users</span> = User::has(<span class="string">&#x27;posts&#x27;</span>, <span class="string">&#x27;&gt;&#x27;</span>, <span class="number">1</span>)-&gt;get();</span><br></pre></td></tr></table></figure>
+<p>底层执行的 SQL 查询语句如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">  <span class="operator">*</span></span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">  `users`</span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">  (</span><br><span class="line">    <span class="keyword">select</span></span><br><span class="line">      <span class="built_in">count</span>(<span class="operator">*</span>)</span><br><span class="line">    <span class="keyword">from</span></span><br><span class="line">      `posts`</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">      `users`.`id` <span class="operator">=</span> `posts`.`user_id`</span><br><span class="line">      <span class="keyword">and</span> `posts`.`deleted_at` <span class="keyword">is</span> <span class="keyword">null</span></span><br><span class="line">  ) <span class="operator">&gt;</span> <span class="number">1</span></span><br><span class="line">  <span class="keyword">and</span> `email_verified_at` <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">null</span></span><br></pre></td></tr></table></figure>
+<p>你甚至还可以通过嵌套关联查询的方式过滤发布的文章有评论的用户：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$users</span> = User::has(<span class="string">&#x27;posts.comments&#x27;</span>)-&gt;get();</span><br></pre></td></tr></table></figure>
+<p>其实也就是一个嵌套的 EXISTS 查询：<br><img src="https://upload.anitoys.com/hellocode/20210324235208.jpg" alt="img"><br>此外，还有一个 orHas 方法，顾名思义，它会执行一个 OR 查询，比如我们想要过滤包含评论或标签的文章：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$posts</span> = Post::has(<span class="string">&#x27;comments&#x27;</span>)-&gt;orHas(<span class="string">&#x27;tags&#x27;</span>)-&gt;get();</span><br></pre></td></tr></table></figure>
+<p>如果你想要通过更复杂的关联查询过滤模型实例，还可以通过 whereHas/orWhereHas 方法基于闭包函数定义查询条件，比如我们想要过滤发布文章标题中包含「Laravel学院」的所有用户：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$users</span> = User::whereHas(<span class="string">&#x27;posts&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"><span class="variable">$query</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$query</span>-&gt;where(<span class="string">&#x27;title&#x27;</span>, <span class="string">&#x27;like&#x27;</span>, <span class="string">&#x27;Laravel学院%&#x27;</span>);</span><br><span class="line">&#125;)-&gt;get();</span><br></pre></td></tr></table></figure>
+<p>底层执行的 SQL 查询语句如下：<br><img src="https://upload.anitoys.com/hellocode/20210324235215.jpg" alt="img"><br>如果你想进一步过滤出文章标题和评论都包含「Laravel学院」的用户，可以在上述闭包函数中通过查询构建器进一步指定：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$users</span> = User::whereHas(<span class="string">&#x27;posts&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"><span class="variable">$query</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$query</span>-&gt;where(<span class="string">&#x27;title&#x27;</span>, <span class="string">&#x27;like&#x27;</span>, <span class="string">&#x27;Laravel学院%&#x27;</span>)</span><br><span class="line">       -&gt;whereExists(<span class="function"><span class="keyword">function</span> (<span class="params"><span class="variable">$query</span></span>)  </span>&#123;</span><br><span class="line">          <span class="variable">$query</span>-&gt;from(<span class="string">&#x27;comments&#x27;</span>)</span><br><span class="line">              -&gt;whereRaw(<span class="string">&#x27;`posts`.`id` = `comments`.`commentable_id`&#x27;</span>)</span><br><span class="line">              -&gt;where(<span class="string">&#x27;content&#x27;</span>, <span class="string">&#x27;like&#x27;</span>, <span class="string">&#x27;Laravel学院%&#x27;</span>)</span><br><span class="line">              -&gt;where(<span class="string">&#x27;commentable_type&#x27;</span>, Post::class)</span><br><span class="line">              -&gt;whereNull(<span class="string">&#x27;deleted_at&#x27;</span>);</span><br><span class="line">      &#125;);</span><br><span class="line">&#125;)-&gt;get();</span><br></pre></td></tr></table></figure>
+<p>如果你想过滤文章标题或评论都包含「Laravel学院」的用户，将 whereExists 换成 orWhereExists 方法即可：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$users</span> = User::whereHas(<span class="string">&#x27;posts&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"><span class="variable">$query</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$query</span>-&gt;where(<span class="string">&#x27;title&#x27;</span>, <span class="string">&#x27;like&#x27;</span>, <span class="string">&#x27;Laravel学院%&#x27;</span>)</span><br><span class="line">       -&gt;orWhereExists(<span class="function"><span class="keyword">function</span> (<span class="params"><span class="variable">$query</span></span>)  </span>&#123;</span><br><span class="line">          <span class="variable">$query</span>-&gt;from(<span class="string">&#x27;comments&#x27;</span>)</span><br><span class="line">              -&gt;whereRaw(<span class="string">&#x27;`posts`.`id` = `comments`.`commentable_id`&#x27;</span>)</span><br><span class="line">              -&gt;where(<span class="string">&#x27;content&#x27;</span>, <span class="string">&#x27;like&#x27;</span>, <span class="string">&#x27;Laravel学院%&#x27;</span>)</span><br><span class="line">              -&gt;where(<span class="string">&#x27;commentable_type&#x27;</span>, Post::class)</span><br><span class="line">              -&gt;whereNull(<span class="string">&#x27;deleted_at&#x27;</span>);</span><br><span class="line">      &#125;);</span><br><span class="line">&#125;)-&gt;get();</span><br></pre></td></tr></table></figure>
+<p>如果不想自己构造查询构建器，还可以通过方法链的方式实现上述同样的功能：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// and </span></span><br><span class="line"><span class="variable">$users</span> = User::whereHas(<span class="string">&#x27;posts&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"><span class="variable">$query</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$query</span>-&gt;where(<span class="string">&#x27;title&#x27;</span>, <span class="string">&#x27;like&#x27;</span>, <span class="string">&#x27;Laravel学院%&#x27;</span>);</span><br><span class="line">&#125;)-&gt;whereHas(<span class="string">&#x27;posts.comments&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"><span class="variable">$query</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$query</span>-&gt;where(<span class="string">&#x27;content&#x27;</span>, <span class="string">&#x27;like&#x27;</span>, <span class="string">&#x27;Laravel学院%&#x27;</span>);</span><br><span class="line">&#125;)-&gt;get();</span><br><span class="line"></span><br><span class="line"><span class="comment">// or    </span></span><br><span class="line"><span class="variable">$users</span> = User::whereHas(<span class="string">&#x27;posts&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"><span class="variable">$query</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$query</span>-&gt;where(<span class="string">&#x27;title&#x27;</span>, <span class="string">&#x27;like&#x27;</span>, <span class="string">&#x27;Laravel学院%&#x27;</span>);</span><br><span class="line">&#125;)-&gt;orWhereHas(<span class="string">&#x27;posts.comments&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params"><span class="variable">$query</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$query</span>-&gt;where(<span class="string">&#x27;content&#x27;</span>, <span class="string">&#x27;like&#x27;</span>, <span class="string">&#x27;Laravel学院%&#x27;</span>);</span><br><span class="line">&#125;)-&gt;get();</span><br></pre></td></tr></table></figure>
+<h3 id="无结果过滤"><a href="#无结果过滤" class="headerlink" title="无结果过滤"></a>无结果过滤</h3><p>与 has/orHas 方法相对的，还有一对 doesntHave/orDoesntHave 方法。很显然，它们用于过滤不包含对应关联结果的模型实例。比如我们想要那些没有发布过文章的用户，可以通过 doesntHave 方法实现：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$users</span> = User::doesntHave(<span class="string">&#x27;posts&#x27;</span>)-&gt;get();</span><br></pre></td></tr></table></figure>
+<p>获取的结果也是模型实例集合：<br><img src="https://upload.anitoys.com/hellocode/20210324235222.jpg" alt="img"><br>底层执行的 SQL 语句一个 NOT EXISTS 查询：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">  <span class="operator">*</span></span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">  `users`</span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">  <span class="keyword">not</span> <span class="keyword">exists</span> (</span><br><span class="line">    <span class="keyword">select</span></span><br><span class="line">      <span class="operator">*</span></span><br><span class="line">    <span class="keyword">from</span></span><br><span class="line">      `posts`</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">      `users`.`id` <span class="operator">=</span> `posts`.`user_id`</span><br><span class="line">      <span class="keyword">and</span> `posts`.`deleted_at` <span class="keyword">is</span> <span class="keyword">null</span></span><br><span class="line">  )</span><br><span class="line">  <span class="keyword">and</span> `email_verified_at` <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">null</span></span><br></pre></td></tr></table></figure>
+<p>如果想要获取没有评论或没有标签的文章，可以结合 doesntHave 和 orDoesntHave 方法实现：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$posts</span> = Post::doesntHave(<span class="string">&#x27;comments&#x27;</span>)-&gt;doesntHave(<span class="string">&#x27;tags&#x27;</span>)-&gt;get();</span><br></pre></td></tr></table></figure>
+<p>对应的 SQL 语句是：<br><img src="https://upload.anitoys.com/hellocode/20210324235229.jpg" alt="img"><br>和 whereHas 方法和 orWhereHas 方法相对的，也有 whereDoesntHave 和 orWhereDoesntHave 方法，使用方法一样，这里就不再赘述了。</p>
+<h2 id="统计关联模型"><a href="#统计关联模型" class="headerlink" title="统计关联模型"></a>统计关联模型</h2><p>我们还可以通过 Eloquent 提供的 withCount 方法在不加载关联模型的情况下统计关联结果的数量。比如我们想要统计某篇文章的评论数，可以这么做：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::withCount(<span class="string">&#x27;comments&#x27;</span>)-&gt;findOrFail(<span class="number">32</span>);</span><br></pre></td></tr></table></figure>
+<p>我们查看下返回的 $post 模型实例的数据结构：<br><img src="https://upload.anitoys.com/hellocode/20210324235451.jpg" alt="img"><br>其中包含了 comments_count 字段，通过这个字段就可以访问该文章的评论数。如果要统计其它关联模型结果数量字段，可以依次类推，对应字段都是 {relation}_count 结构。</p>
+<blockquote>
+<p>注：实际开发中为了提高查询性能，我们往往是在 posts 表中冗余提供一个 comments_count 字段，每新增一条评论，该字段值加 1，查询的时候直接取该字段即可，从而提高查询的性能。</p>
+</blockquote>
+<p>此外，你还可以通过数组传递多个关联关系一次统计多个字段，还可以通过闭包函数指定对应统计的过滤条件：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::withCount([<span class="string">&#x27;tags&#x27;</span>, <span class="string">&#x27;comments&#x27;</span> =&gt; <span class="function"><span class="keyword">function</span> (<span class="params"><span class="variable">$query</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$query</span>-&gt;where(<span class="string">&#x27;content&#x27;</span>, <span class="string">&#x27;like&#x27;</span>, <span class="string">&#x27;Laravel学院&#x27;</span>)</span><br><span class="line">        -&gt;orderBy(<span class="string">&#x27;created_at&#x27;</span>, <span class="string">&#x27;desc&#x27;</span>);</span><br><span class="line">&#125;])-&gt;findOrFail(<span class="number">32</span>);</span><br></pre></td></tr></table></figure>
+<p>甚至还可以为统计字段设置别名，以便可以从不同维度统计某个字段：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::withCount([</span><br><span class="line">    <span class="string">&#x27;comments&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;comments as pending_comments&#x27;</span> =&gt; <span class="function"><span class="keyword">function</span>(<span class="params"><span class="variable">$query</span></span>) </span>&#123;</span><br><span class="line">        <span class="variable">$query</span>-&gt;where(<span class="string">&#x27;status&#x27;</span>, Comment::PENDING);</span><br><span class="line">    &#125;</span><br><span class="line">])-&gt;findOrFail(<span class="number">32</span>);</span><br></pre></td></tr></table></figure>
+<p>对应的返回结果如下：<br><img src="https://upload.anitoys.com/hellocode/20210324235242.jpg" alt="img"><br>这个功能用于不考虑性能的场景进行快速查询还是很方便的，但如果对性能有较高要求，则不推荐使用，毕竟是要执行多次查询才能逐个统计出来。</p>
+<h2 id="渴求式加载-1"><a href="#渴求式加载-1" class="headerlink" title="渴求式加载"></a>渴求式加载</h2><p>我们在前面已经介绍过，渴求式加载通过 with 方法实现：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::with(<span class="string">&#x27;author&#x27;</span>)-&gt;findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$author</span> = <span class="variable">$post</span>-&gt;author;</span><br></pre></td></tr></table></figure>
+<p>渴求式加载会在查询到模型实例结果后，通过 IN 查询获取关联结果，并将其附着到对应的模型实例上，在后面访问的时候不会再对数据库进行查询。所以不管模型实例有多少个，关联结果只会查询一次，加上模型本身查询总共是两次查询，在列表查询时，大大减少了对数据库的连接查询次数，因而有更好的性能表现，推荐使用。</p>
+<p>渴求式加载支持一次加载多个关联模型（参数名对应相应的关联方法名）：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$posts</span> = Post::with(<span class="string">&#x27;author&#x27;</span>, <span class="string">&#x27;comments&#x27;</span>, <span class="string">&#x27;tags&#x27;</span>)-&gt;findOrFail(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<p>返回的数据格式如下：<br><img src="https://upload.anitoys.com/hellocode/20210324235248.jpg" alt="img"><br>此外，渴求式加载还支持嵌套查询，比如我们想要访问文章作者的扩展表信息，可以这么做：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::with(<span class="string">&#x27;author.profile&#x27;</span>)-&gt;findOrFail(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<p>这样就可以嵌套获取到 profile 表记录的信息：<br><img src="https://upload.anitoys.com/hellocode/20210324235519.jpg" alt="img"><br>这里会涉及到三个 SQL 查询：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> `posts` <span class="keyword">where</span> `posts`.`id` <span class="operator">=</span> ? <span class="keyword">and</span> `posts`.`deleted_at` <span class="keyword">is</span> <span class="keyword">null</span> limit <span class="number">1</span>;</span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> `users` <span class="keyword">where</span> `users`.`id` <span class="keyword">in</span> (?) <span class="keyword">and</span> `email_verified_at` <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">null</span>;</span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> `user_profiles` <span class="keyword">where</span> `user_profiles`.`user_id` <span class="keyword">in</span> (?);</span><br></pre></td></tr></table></figure>
+<p>你还可以通过 with 方法指定要加载的字段：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::with(<span class="string">&#x27;author:id,name&#x27;</span>)-&gt;findOrFail(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<p>注：使用此特性 id 字段必须列出。</p>
+<p>在渴求式加载中，也可以通过闭包传入额外的约束条件，只不过这个约束条件是对关联模型自身的过滤，不影响目标模型的查询：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::with([<span class="string">&#x27;comments&#x27;</span> =&gt; <span class="function"><span class="keyword">function</span> (<span class="params"><span class="variable">$query</span></span>) </span>&#123;</span><br><span class="line">    <span class="variable">$query</span>-&gt;where(<span class="string">&#x27;content&#x27;</span>, <span class="string">&#x27;like&#x27;</span>, <span class="string">&#x27;Laravel学院%&#x27;</span>)</span><br><span class="line">        -&gt;orderBy(<span class="string">&#x27;created_at&#x27;</span>, <span class="string">&#x27;desc&#x27;</span>);</span><br><span class="line">&#125;])-&gt;where(<span class="string">&#x27;id&#x27;</span>, <span class="string">&#x27;&lt;&#x27;</span>, <span class="number">5</span>)-&gt;get();</span><br></pre></td></tr></table></figure>
+<p>底层执行的 SQL 语句如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">  <span class="operator">*</span></span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">  `posts`</span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">  `id` <span class="operator">&lt;</span> <span class="number">5</span></span><br><span class="line">  <span class="keyword">and</span> `posts`.`deleted_at` <span class="keyword">is</span> <span class="keyword">null</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span></span><br><span class="line">  <span class="operator">*</span></span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">  `comments`</span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">  `comments`.`commentable_id` <span class="keyword">in</span> (<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>)</span><br><span class="line">  <span class="keyword">and</span> `comments`.`commentable_type` <span class="operator">=</span> &quot;App\Post&quot;</span><br><span class="line">  <span class="keyword">and</span> `content` <span class="keyword">like</span> &quot;Laravel学院%&quot;</span><br><span class="line">  <span class="keyword">and</span> `comments`.`deleted_at` <span class="keyword">is</span> <span class="keyword">null</span></span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span></span><br><span class="line">  `created_at` <span class="keyword">desc</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="懒惰渴求式加载"><a href="#懒惰渴求式加载" class="headerlink" title="懒惰渴求式加载"></a>懒惰渴求式加载</h2><p>有时候，你可能觉得一次性加载所有关联数据有点浪费，对于特定条件下才使用的数据我们可以通过动态条件判断进行渴求式加载或者延迟加载。我们将这种加载叫做懒惰渴求式加载，这种加载可以通过 load 方法实现：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$users</span> = User::all();</span><br><span class="line"><span class="variable">$condition</span> = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (<span class="variable">$condition</span>) &#123;</span><br><span class="line">    <span class="variable">$users</span>-&gt;load(<span class="string">&#x27;posts&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>懒惰渴求式加载也是渴求式加载，只不过是在需要的时候才去加载，所以加上了「懒惰」这个修饰词，底层执行的 SQL 查询语句和渴求式加载是一样的：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">  <span class="operator">*</span></span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">  `posts`</span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">  `posts`.`user_id` <span class="keyword">in</span> (?, ?, ?, ?, ?)</span><br><span class="line">  <span class="keyword">and</span> `posts`.`deleted_at` <span class="keyword">is</span> <span class="keyword">null</span></span><br><span class="line">和渴求式加载一样，它也支持通过闭包传递额外的约束条件：</span><br><span class="line"></span><br><span class="line">$posts <span class="operator">=</span> Post::<span class="keyword">where</span>(<span class="string">&#x27;id&#x27;</span>, <span class="string">&#x27;&lt;=&#x27;</span>, <span class="number">3</span>)<span class="operator">-</span><span class="operator">&gt;</span><span class="keyword">get</span>();</span><br><span class="line">$posts-&gt;load([&#x27;comments&#x27; =&gt; function ($query) &#123;</span><br><span class="line">    $query<span class="operator">-</span><span class="operator">&gt;</span><span class="keyword">where</span>(<span class="string">&#x27;content&#x27;</span>, <span class="string">&#x27;like&#x27;</span>, <span class="string">&#x27;Laravel学院%&#x27;</span>)</span><br><span class="line">        <span class="operator">-</span><span class="operator">&gt;</span>orderBy(<span class="string">&#x27;created_at&#x27;</span>, <span class="string">&#x27;desc&#x27;</span>);</span><br><span class="line">&#125;]);</span><br></pre></td></tr></table></figure>
+
+<h1 id="关联插入与更新"><a href="#关联插入与更新" class="headerlink" title="关联插入与更新"></a>关联插入与更新</h1><h2 id="一对多关联记录插入"><a href="#一对多关联记录插入" class="headerlink" title="一对多关联记录插入"></a>一对多关联记录插入</h2><p>新增关联模型的时候，可以在父模型上调用相应方法直接插入记录到数据库，这样做的好处是不需要指定关联模型与父模型的外键关联字段值，Eloquent 底层会自动判断并设置。比如，如果我们要在某篇文章上新增一条评论可以这么做：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$faker</span> = \Faker\Factory::create();</span><br><span class="line"><span class="variable">$comment</span> = <span class="keyword">new</span> Comment();</span><br><span class="line"><span class="variable">$comment</span>-&gt;content = <span class="variable">$faker</span>-&gt;paragraph;</span><br><span class="line"><span class="variable">$comment</span>-&gt;user_id = mt_rand(<span class="number">1</span>, <span class="number">15</span>);</span><br><span class="line"><span class="variable">$post</span>-&gt;comments()-&gt;save(<span class="variable">$comment</span>);</span><br></pre></td></tr></table></figure>
+<p>Eloquent 底层会自动帮我们维护 commentable_id 和 commentable_type 字段。</p>
+<p>还可以通过 saveMany 方法一次插入多条关联记录，前提是为关联模型配置了批量赋值，比如我们为 Comment 模型类配置白名单 $fillable 属性如下（你也可以不配置批量赋值，但是需要多次实例化并逐个设置评论模型属性值，很麻烦）：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="variable">$fillable</span> = [</span><br><span class="line">    <span class="string">&#x27;content&#x27;</span>, <span class="string">&#x27;user_id&#x27;</span></span><br><span class="line">];</span><br></pre></td></tr></table></figure>
+<p>这样我们就可以批量插入文章评论数据了：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$faker</span> = \Faker\Factory::create();</span><br><span class="line"><span class="variable">$post</span>-&gt;comments()-&gt;saveMany([</span><br><span class="line">    <span class="keyword">new</span> Comment([<span class="string">&#x27;content&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;paragraph, <span class="string">&#x27;user_id&#x27;</span> =&gt; mt_rand(<span class="number">1</span>, <span class="number">15</span>)]),</span><br><span class="line">    <span class="keyword">new</span> Comment([<span class="string">&#x27;content&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;paragraph, <span class="string">&#x27;user_id&#x27;</span> =&gt; mt_rand(<span class="number">1</span>, <span class="number">15</span>)]),</span><br><span class="line">    <span class="keyword">new</span> Comment([<span class="string">&#x27;content&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;paragraph, <span class="string">&#x27;user_id&#x27;</span> =&gt; mt_rand(<span class="number">1</span>, <span class="number">15</span>)]),</span><br><span class="line">    <span class="keyword">new</span> Comment([<span class="string">&#x27;content&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;paragraph, <span class="string">&#x27;user_id&#x27;</span> =&gt; mt_rand(<span class="number">1</span>, <span class="number">15</span>)]),</span><br><span class="line">    <span class="keyword">new</span> Comment([<span class="string">&#x27;content&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;paragraph, <span class="string">&#x27;user_id&#x27;</span> =&gt; mt_rand(<span class="number">1</span>, <span class="number">15</span>)])</span><br><span class="line">]);</span><br></pre></td></tr></table></figure>
+<p>此外，我们还可以通过 create/createMany 方法来插入关联数据，与 save/saveMany 方法不同的是，这两个方法接收的是数组参数：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 插入一条记录</span></span><br><span class="line"><span class="variable">$post</span>-&gt;comments()-&gt;create([</span><br><span class="line">    <span class="string">&#x27;content&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;paragraph, <span class="string">&#x27;user_id&#x27;</span> =&gt; mt_rand(<span class="number">1</span>, <span class="number">15</span>)</span><br><span class="line">]);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 插入多条记录</span></span><br><span class="line"><span class="variable">$post</span>-&gt;comments()-&gt;createMany([</span><br><span class="line">    [<span class="string">&#x27;content&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;paragraph, <span class="string">&#x27;user_id&#x27;</span> =&gt; mt_rand(<span class="number">1</span>, <span class="number">15</span>)],</span><br><span class="line">    [<span class="string">&#x27;content&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;paragraph, <span class="string">&#x27;user_id&#x27;</span> =&gt; mt_rand(<span class="number">1</span>, <span class="number">15</span>)],</span><br><span class="line">    [<span class="string">&#x27;content&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;paragraph, <span class="string">&#x27;user_id&#x27;</span> =&gt; mt_rand(<span class="number">1</span>, <span class="number">15</span>)]</span><br><span class="line">]);</span><br></pre></td></tr></table></figure>
+<h2 id="更新一对多所属模型外键字段"><a href="#更新一对多所属模型外键字段" class="headerlink" title="更新一对多所属模型外键字段"></a>更新一对多所属模型外键字段</h2><p>如果是要更新新创建的模型实例所属模型（父模型）的外键字段，比如以 posts 表为例，新增的记录想要更新 user_id 字段，可以这么实现：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$user</span> = User::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$post</span>-&gt;author()-&gt;associate(<span class="variable">$user</span>);</span><br><span class="line"><span class="variable">$post</span>-&gt;save();</span><br></pre></td></tr></table></figure>
+<p>相对的，如果想要解除当前模型与所属模型之间的关联，可以通过 dissociate 方法来实现：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span>-&gt;author()-&gt;dissociate();</span><br><span class="line"><span class="variable">$post</span>-&gt;save();</span><br></pre></td></tr></table></figure>
+<p>这样，就会将 posts.user_id 置为 null。前提是 user_id 允许为 null，否则会抛出异常。</p>
+<h3 id="空对象模型"><a href="#空对象模型" class="headerlink" title="空对象模型"></a>空对象模型</h3><p>如果外键字段 user_id 允许为空的话，当我们访问 Post 模型上的 author 属性时，默认返回为 null。Eloquent 允许我们为这种空对象定义一个默认的类型，这个对象的类型可以在定义关联关系的时候指定：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">author</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;belongsTo(User::class, <span class="string">&#x27;user_id&#x27;</span>, <span class="string">&#x27;id&#x27;</span>, <span class="string">&#x27;author&#x27;</span>)</span><br><span class="line">        -&gt;withDefault();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样，再次访问对应 Post 模型实例的时候返回的就是一个空的 App\User 实例，你还可以为这个对象指定默认属性值：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">author</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;belongsTo(User::class, <span class="string">&#x27;user_id&#x27;</span>, <span class="string">&#x27;id&#x27;</span>, <span class="string">&#x27;author&#x27;</span>)</span><br><span class="line">        -&gt;withDefault([</span><br><span class="line">            <span class="string">&#x27;id&#x27;</span> =&gt; <span class="number">0</span>,</span><br><span class="line">            <span class="string">&#x27;name&#x27;</span> =&gt; <span class="string">&#x27;游客用户&#x27;</span>,</span><br><span class="line">        ]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>再次访问对应 Post 模型上的 author 属性时，就会返回如下默认的空对象了：<br><img src="https://upload.anitoys.com/hellocode/20210324235300.jpg" alt="img"><br>该特性其实应用了设计模式中的空对象模式，好处是在代码里可以为不同情况编写一致性代码。这样，我们就不需要在每个地方去判断如果文章作者信息为空该如何处理了，因为这种情况下返回的也是一个正常的 User 模型实例。</p>
+<h2 id="多对多关联的绑定与解除"><a href="#多对多关联的绑定与解除" class="headerlink" title="多对多关联的绑定与解除"></a>多对多关联的绑定与解除</h2><p>在插入多对多关联记录的时候，可以通过上面一对多关联记录插入的方式。以文章与标签为例，完全可以这样通过文章模型新增标签模型，同时更新中间表记录：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 插入单条记录</span></span><br><span class="line"><span class="variable">$post</span>-&gt;tags()-&gt;save(</span><br><span class="line">    <span class="keyword">new</span> Tag([<span class="string">&#x27;name&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;word])</span><br><span class="line">); </span><br><span class="line"></span><br><span class="line"><span class="comment">// 如果中间表接收额外参数可以通过第二个参数传入</span></span><br><span class="line"><span class="variable">$post</span>-&gt;tags()-&gt;save(</span><br><span class="line">    <span class="keyword">new</span> Tag([<span class="string">&#x27;name&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;word]), </span><br><span class="line">    [<span class="string">&#x27;user_id&#x27;</span> =&gt; <span class="number">1</span>]</span><br><span class="line">); </span><br><span class="line"></span><br><span class="line"><span class="comment">// 插入多条记录</span></span><br><span class="line"><span class="variable">$post</span>-&gt;tags()-&gt;saveMany([</span><br><span class="line">    <span class="keyword">new</span> Tag([<span class="string">&#x27;name&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;unique()-&gt;word]),</span><br><span class="line">    <span class="keyword">new</span> Tag([<span class="string">&#x27;name&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;unique()-&gt;word]),</span><br><span class="line">    <span class="keyword">new</span> Tag([<span class="string">&#x27;name&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;unique()-&gt;word])</span><br><span class="line">]);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 如果插入多条记录需要传递中间表额外字段值（通过键值关联对应记录与额外字段）</span></span><br><span class="line"><span class="variable">$post</span>-&gt;tags()-&gt;saveMany([</span><br><span class="line">    <span class="number">1</span> =&gt; <span class="keyword">new</span> Tag([<span class="string">&#x27;name&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;unique()-&gt;word]),</span><br><span class="line">    <span class="number">2</span> =&gt; <span class="keyword">new</span> Tag([<span class="string">&#x27;name&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;unique()-&gt;word]),</span><br><span class="line">    <span class="number">3</span> =&gt; <span class="keyword">new</span> Tag([<span class="string">&#x27;name&#x27;</span> =&gt; <span class="variable">$faker</span>-&gt;unique()-&gt;word])</span><br><span class="line">], [</span><br><span class="line">    <span class="number">1</span> =&gt; [<span class="string">&#x27;user_id&#x27;</span> =&gt; <span class="number">1</span>],</span><br><span class="line">    <span class="number">2</span> =&gt; [<span class="string">&#x27;user_id&#x27;</span> =&gt; <span class="number">2</span>],</span><br><span class="line">    <span class="number">3</span> =&gt; [<span class="string">&#x27;user_id&#x27;</span> =&gt; <span class="number">3</span>],</span><br><span class="line">]);</span><br></pre></td></tr></table></figure>
+<p>此外，Eloquent 底层还提供了为已有模型之间进行多对多关联的绑定和解除操作。</p>
+<p>还是以文章和标签为例，要将两个本来没有关联关系的记录绑定起来，可以通过 attach 方法实现：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span> = Post::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$tag</span> = Tag::findOrFail(<span class="number">1</span>);</span><br><span class="line"><span class="variable">$post</span>-&gt;tags()-&gt;attach(<span class="variable">$tag</span>-&gt;id);</span><br><span class="line"><span class="comment">// 如果中间表还有其它额外字段，可以通过第二个数组参数传入</span></span><br><span class="line"><span class="comment">// $post-&gt;tags()-&gt;attach($tag-&gt;id, [&#x27;user_id&#x27; =&gt; $userId]);</span></span><br><span class="line"><span class="comment">// 还可以一次绑定多个标签</span></span><br><span class="line"><span class="comment">// $post-&gt;tags()-&gt;attach([1, 2]);</span></span><br><span class="line"><span class="comment">// 如果绑定多个标签，要传递额外字段值，可以这么做：</span></span><br><span class="line"><span class="comment">/*$post-&gt;tags()-&gt;attach([</span></span><br><span class="line"><span class="comment">    1 =&gt; [&#x27;user_id&#x27; =&gt; 1],</span></span><br><span class="line"><span class="comment">    2 =&gt; [&#x27;user_id&#x27; =&gt; 2]</span></span><br><span class="line"><span class="comment">]);*/</span></span><br></pre></td></tr></table></figure>
+<p>如果要解除这个关联关系可以通过 detach 方法实现：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span>-&gt;tags()-&gt;detach(<span class="number">1</span>);</span><br><span class="line"><span class="comment">// 如果想要一次解除多个关联，可以这么做：</span></span><br><span class="line"><span class="comment">// $post-&gt;tags()-&gt;detach([1, 2]);</span></span><br><span class="line"><span class="comment">// 如果想要一次解除所有关联，可以这么做：</span></span><br><span class="line"><span class="comment">// $post-&gt;tags()-&gt;detach();</span></span><br></pre></td></tr></table></figure>
+<p>上面这两种方法很方便，但还有更方便的，当我们在更新某篇文章的标签时，往往同时涉及关联标签的绑定和解除。按照上面的逻辑，我们需要先把所有标签记录查询出来，再判断哪些需要绑定关联、哪些需要解除关联、哪些需要插入新的标签记录，然后再通过 attach 和 detach 方法最终完成与对应文章的绑定和解除关联。</p>
+<p>对于那些已存在的标签记录，我们可以通过更高效的方法与文章进行关联关系的绑定和解除，这个方法就是 sync，调用该方法时只需传入刚创建/更新后文章的标签对应 ID 值，至于哪些之前不存在的关联需要绑定，哪些存在的关联需要解除，哪些需要维护现状，交由 Eloquent 底层去判断：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span>-&gt;tags()-&gt;sync([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);</span><br></pre></td></tr></table></figure>
+<p>如果对应新增数据需要传递额外参数，参考 attach 即可，两者是一样的。</p>
+<p>有时候，你可能仅仅是想要更新中间表字段值，这个时候，可以通过 updateExistingPivot 方法在第二个参数中将需要更新的字段值以关联数组的方式传递过去：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$post</span>-&gt;tags()-&gt;updateExistingPivot(<span class="variable">$tagId</span>, <span class="variable">$attributes</span>);</span><br></pre></td></tr></table></figure>
+<h2 id="触发父模型时间戳更新"><a href="#触发父模型时间戳更新" class="headerlink" title="触发父模型时间戳更新"></a>触发父模型时间戳更新</h2><p>当一个模型归属于另外一个模型时，例如 Comment 模型归属于 Post 模型，当子模型更新时，父模型的更新时间也同步更新往往很有用，比如在有新评论时触发文章页缓存更新，或者通知搜索引擎页面有更新等等。Eloquent 提供了这种同步机制帮助我们更新子模型时触发父模型的更新时间 updated_at 字段值更新，要让该机制生效，需要在子模型中配置 $touches 属性：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 要触发更新的父级关联关系</span></span><br><span class="line"><span class="keyword">protected</span> <span class="variable">$touches</span> = [</span><br><span class="line">    <span class="string">&#x27;commentable&#x27;</span></span><br><span class="line">];</span><br></pre></td></tr></table></figure>
+<p>属性值是对应关联方法的名称，支持配置多个关联关系。下面我们简单演示下，以 id=31 的评论记录为例，对应的模型数据及所属文章模型数据如下：<br><img src="https://upload.anitoys.com/hellocode/20210324235308.jpg" alt="img"></p>
+ 
+      <!-- reward -->
+      
+      <div id="reword-out">
+        <div id="reward-btn">
+          打赏
+        </div>
+      </div>
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://blog.wangk.cn/2018/12/18/Eloquent%E6%A8%A1%E5%9E%8B%E5%85%B3%E8%81%94%E5%85%B3%E7%B3%BB/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Laravel/" rel="tag">Laravel</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2019/01/04/DockerCe/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Docker CE
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2018/09/05/%E5%81%A5%E8%BA%AB%E5%B9%B2%E8%B4%A7/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">健身干货</div>
+      </a>
+    
+  </nav>
+
+   
+ 
+   
+     
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        1983-2021
+        <i class="ri-heart-fill heart_icon"></i> 麒麟爸
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        
+        由 <a href="https://hexo.io" target="_blank">Hexo</a> 强力驱动
+        <span class="division">|</span>
+        主题 - <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      
+        <li>
+          <a href="https://beian.miit.gov.cn/" target="_black" rel="nofollow">苏ICP备18046890号-2</a>
+        </li>
+        
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="麒麟教育"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="//static.cy-sq.com/wangk/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="//static.cy-sq.com/wangk/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script>
+
+<script src="/js/clickBoom1.js"></script>
+ 
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="86"
+        src="//music.163.com/outchain/player?type=2&id=29848726&auto=0&height=66"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>
