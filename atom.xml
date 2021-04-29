@@ -89,30 +89,6 @@
   </entry>
   
   <entry>
-    <title>Docker部署Lnmp</title>
-    <link href="https://blog.wangk.cn/2021/02/02/Docker%E9%83%A8%E7%BD%B2Lnmp/"/>
-    <id>https://blog.wangk.cn/2021/02/02/Docker%E9%83%A8%E7%BD%B2Lnmp/</id>
-    <published>2021-02-02T01:13:47.000Z</published>
-    <updated>2021-03-18T12:05:55.290Z</updated>
-    
-    <content type="html"><![CDATA[<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">version: &quot;3&quot;</span><br><span class="line"></span><br><span class="line">services:</span><br><span class="line">   </span><br><span class="line">    nginx:</span><br><span class="line">        image: wangk/nginx</span><br><span class="line">        restart: always</span><br><span class="line">        ports:</span><br><span class="line">            - $&#123;nginx_port_80&#125;:80</span><br><span class="line">            - $&#123;nginx_port_443&#125;:443</span><br><span class="line">            - $&#123;nginx_port_80_other&#125;:80</span><br><span class="line">        volumes:</span><br><span class="line">            - &quot;$&#123;workspace&#125;:$&#123;workspace&#125;&quot;</span><br><span class="line">            - &quot;$&#123;wwwconf&#125;/etc/docker:/etc/nginx&quot;</span><br><span class="line">    mysql:</span><br><span class="line">        image: wangk/mysql</span><br><span class="line">        container_name: mysql</span><br><span class="line">        restart: always</span><br><span class="line">        environment:</span><br><span class="line">            MYSQL_ROOT_PASSWORD: $&#123;MYSQL_ROOT_PASSWORD&#125;</span><br><span class="line">            TZ: $&#123;WORKSPACE_TIMEZONE&#125;</span><br><span class="line">        command:</span><br><span class="line">            --default_authentication_plugin=mysql_native_password</span><br><span class="line">        volumes:</span><br><span class="line">            - &quot;$&#123;wwwdata&#125;/docker/mysql:/var/lib/mysql&quot;</span><br><span class="line">        ports:</span><br><span class="line">            - &quot;$&#123;mysql_port_default&#125;:3306&quot;</span><br><span class="line">    php80:</span><br><span class="line">        image: wangk/php:8.0-fpm</span><br><span class="line">        restart: always</span><br><span class="line">        ports:</span><br><span class="line">            - &quot;$&#123;php80_fpm_port&#125;:9000&quot;</span><br><span class="line">        volumes:</span><br><span class="line">            - &quot;$&#123;workspace&#125;:$&#123;workspace&#125;&quot;</span><br><span class="line">    php74:</span><br><span class="line">        image: wangk/php:7.4-fpm</span><br><span class="line">        restart: always</span><br><span class="line">        ports:</span><br><span class="line">            - &quot;$&#123;php74_fpm_port&#125;:9000&quot;</span><br><span class="line">        volumes:</span><br><span class="line">            - &quot;$&#123;workspace&#125;:$&#123;workspace&#125;&quot;</span><br><span class="line">    php73:</span><br><span class="line">        image: wangk/php:7.3-fpm</span><br><span class="line">        restart: always</span><br><span class="line">        ports:</span><br><span class="line">            - &quot;$&#123;php73_fpm_port&#125;:9000&quot;</span><br><span class="line">        volumes:</span><br><span class="line">            - &quot;$&#123;workspace&#125;:$&#123;workspace&#125;&quot;</span><br></pre></td></tr></table></figure>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;figure class=&quot;highlight xml&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;</summary>
-      
-    
-    
-    
-    <category term="docker" scheme="https://blog.wangk.cn/categories/docker/"/>
-    
-    
-    <category term="docker" scheme="https://blog.wangk.cn/tags/docker/"/>
-    
-  </entry>
-  
-  <entry>
     <title>Docker部署frps</title>
     <link href="https://blog.wangk.cn/2021/02/02/Docker%E9%83%A8%E7%BD%B2frps/"/>
     <id>https://blog.wangk.cn/2021/02/02/Docker%E9%83%A8%E7%BD%B2frps/</id>
@@ -125,6 +101,30 @@
       
       
     <summary type="html">&lt;h1 id=&quot;docker-compose-yaml文件配置&quot;&gt;&lt;a href=&quot;#docker-compose-yaml文件配置&quot; class=&quot;headerlink&quot; title=&quot;docker-compose.yaml文件配置&quot;&gt;&lt;/a&gt;docker-compose.ya</summary>
+      
+    
+    
+    
+    <category term="docker" scheme="https://blog.wangk.cn/categories/docker/"/>
+    
+    
+    <category term="docker" scheme="https://blog.wangk.cn/tags/docker/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Docker部署Lnmp</title>
+    <link href="https://blog.wangk.cn/2021/02/02/Docker%E9%83%A8%E7%BD%B2Lnmp/"/>
+    <id>https://blog.wangk.cn/2021/02/02/Docker%E9%83%A8%E7%BD%B2Lnmp/</id>
+    <published>2021-02-02T01:13:47.000Z</published>
+    <updated>2021-03-18T12:05:55.290Z</updated>
+    
+    <content type="html"><![CDATA[<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">version: &quot;3&quot;</span><br><span class="line"></span><br><span class="line">services:</span><br><span class="line">   </span><br><span class="line">    nginx:</span><br><span class="line">        image: wangk/nginx</span><br><span class="line">        restart: always</span><br><span class="line">        ports:</span><br><span class="line">            - $&#123;nginx_port_80&#125;:80</span><br><span class="line">            - $&#123;nginx_port_443&#125;:443</span><br><span class="line">            - $&#123;nginx_port_80_other&#125;:80</span><br><span class="line">        volumes:</span><br><span class="line">            - &quot;$&#123;workspace&#125;:$&#123;workspace&#125;&quot;</span><br><span class="line">            - &quot;$&#123;wwwconf&#125;/etc/docker:/etc/nginx&quot;</span><br><span class="line">    mysql:</span><br><span class="line">        image: wangk/mysql</span><br><span class="line">        container_name: mysql</span><br><span class="line">        restart: always</span><br><span class="line">        environment:</span><br><span class="line">            MYSQL_ROOT_PASSWORD: $&#123;MYSQL_ROOT_PASSWORD&#125;</span><br><span class="line">            TZ: $&#123;WORKSPACE_TIMEZONE&#125;</span><br><span class="line">        command:</span><br><span class="line">            --default_authentication_plugin=mysql_native_password</span><br><span class="line">        volumes:</span><br><span class="line">            - &quot;$&#123;wwwdata&#125;/docker/mysql:/var/lib/mysql&quot;</span><br><span class="line">        ports:</span><br><span class="line">            - &quot;$&#123;mysql_port_default&#125;:3306&quot;</span><br><span class="line">    php80:</span><br><span class="line">        image: wangk/php:8.0-fpm</span><br><span class="line">        restart: always</span><br><span class="line">        ports:</span><br><span class="line">            - &quot;$&#123;php80_fpm_port&#125;:9000&quot;</span><br><span class="line">        volumes:</span><br><span class="line">            - &quot;$&#123;workspace&#125;:$&#123;workspace&#125;&quot;</span><br><span class="line">    php74:</span><br><span class="line">        image: wangk/php:7.4-fpm</span><br><span class="line">        restart: always</span><br><span class="line">        ports:</span><br><span class="line">            - &quot;$&#123;php74_fpm_port&#125;:9000&quot;</span><br><span class="line">        volumes:</span><br><span class="line">            - &quot;$&#123;workspace&#125;:$&#123;workspace&#125;&quot;</span><br><span class="line">    php73:</span><br><span class="line">        image: wangk/php:7.3-fpm</span><br><span class="line">        restart: always</span><br><span class="line">        ports:</span><br><span class="line">            - &quot;$&#123;php73_fpm_port&#125;:9000&quot;</span><br><span class="line">        volumes:</span><br><span class="line">            - &quot;$&#123;workspace&#125;:$&#123;workspace&#125;&quot;</span><br></pre></td></tr></table></figure>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;figure class=&quot;highlight xml&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;2&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;</summary>
       
     
     
